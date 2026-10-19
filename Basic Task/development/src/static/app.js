@@ -169,19 +169,31 @@ function renderCompare() {
     $("#compare-content").innerHTML = '<p class="muted">请选择两个运行。</p>';
     return;
   }
+  const deltaText = (aValue, bValue, unit = "", scale = 1) => {
+    if (aValue === null || aValue === undefined || bValue === null || bValue === undefined) {
+      return "—";
+    }
+    const av = Number(aValue) * scale;
+    const bv = Number(bValue) * scale;
+    const diff = bv - av;
+    const pct = av !== 0 ? (diff / av) * 100 : null;
+    const sign = diff >= 0 ? "+" : "";
+    const pctText = pct === null ? "" : ` (${sign}${pct.toFixed(1)}%)`;
+    return `${sign}${diff.toFixed(2)}${unit}${pctText}`;
+  };
   const metrics = [
-    ["成功/总数", (run) => `${run.summary.success}/${run.summary.total}`],
-    ["TTFT 中位数", (run) => `${fmt(run.summary.ttft_median_s)} s`],
-    ["TTFT P95", (run) => `${fmt(run.summary.ttft_p95_s)} s`],
-    ["完成耗时中位数", (run) => `${fmt(run.summary.latency_median_s)} s`],
-    ["完成耗时 P95", (run) => `${fmt(run.summary.latency_p95_s)} s`],
-    ["TPOT", (run) => `${fmt(run.summary.tpot_median_s * 1000, 2)} ms`],
-    ["吞吐", (run) => `${fmt(run.summary.throughput_tokens_per_s, 1)} tok/s`],
-    ["输出 tokens", (run) => `${run.summary.output_tokens ?? "—"}`],
+    ["成功/总数", (run) => `${run.summary.success}/${run.summary.total}`, () => "—"],
+    ["TTFT 中位数", (run) => `${fmt(run.summary.ttft_median_s)} s`, (aRun, bRun) => deltaText(aRun.summary.ttft_median_s, bRun.summary.ttft_median_s, " s")],
+    ["TTFT P95", (run) => `${fmt(run.summary.ttft_p95_s)} s`, (aRun, bRun) => deltaText(aRun.summary.ttft_p95_s, bRun.summary.ttft_p95_s, " s")],
+    ["完成耗时中位数", (run) => `${fmt(run.summary.latency_median_s)} s`, (aRun, bRun) => deltaText(aRun.summary.latency_median_s, bRun.summary.latency_median_s, " s")],
+    ["完成耗时 P95", (run) => `${fmt(run.summary.latency_p95_s)} s`, (aRun, bRun) => deltaText(aRun.summary.latency_p95_s, bRun.summary.latency_p95_s, " s")],
+    ["TPOT", (run) => `${fmt(run.summary.tpot_median_s * 1000, 2)} ms`, (aRun, bRun) => deltaText(aRun.summary.tpot_median_s, bRun.summary.tpot_median_s, " ms", 1000)],
+    ["吞吐", (run) => `${fmt(run.summary.throughput_tokens_per_s, 1)} tok/s`, (aRun, bRun) => deltaText(aRun.summary.throughput_tokens_per_s, bRun.summary.throughput_tokens_per_s, " tok/s")],
+    ["输出 tokens", (run) => `${run.summary.output_tokens ?? "—"}`, (aRun, bRun) => deltaText(aRun.summary.output_tokens, bRun.summary.output_tokens)],
   ];
   const rows = metrics
-    .map(([label, getter]) => {
-      return `<div class="head">${label}</div><div>${esc(a.run_id)}</div><div>${esc(b.run_id)}</div><div>${esc(getter(b))}</div>`;
+    .map(([label, getter, delta]) => {
+      return `<div class="head">${label}</div><div>${esc(getter(a))}</div><div>${esc(getter(b))}</div><div>${esc(delta(a, b))}</div>`;
     })
     .join("");
   $("#compare-content").innerHTML = `<div class="compare-grid">
