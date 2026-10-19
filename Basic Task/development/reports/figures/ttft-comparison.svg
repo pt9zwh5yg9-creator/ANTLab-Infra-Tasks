@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="480" viewBox="0 0 900 480">
+<rect width="100%" height="100%" fill="#161b23"/>
+<text x="90" y="36" fill="#e6edf3" font-family="Segoe UI, Noto Sans SC, sans-serif" font-size="22" font-weight="600">TTFT comparison (log scale, seconds)</text>
+<text x="90" y="58" fill="#8b98a9" font-family="Segoe UI, Noto Sans SC, sans-serif" font-size="13">Lower is better. TTFT includes queueing, prompt processing and network.</text>
+<line x1="90" y1="360.818320724439" x2="860" y2="360.818320724439" stroke="#2a3341" stroke-width="1"/>
+<text x="78" y="364.818320724439" text-anchor="end" fill="#8b98a9" font-family="Segoe UI, sans-serif" font-size="12">0.1 s</text>
+<line x1="90" y1="263.878880482959" x2="860" y2="263.878880482959" stroke="#2a3341" stroke-width="1"/>
+<text x="78" y="267.878880482959" text-anchor="end" fill="#8b98a9" font-family="Segoe UI, sans-serif" font-size="12">1 s</text>
+<line x1="90" y1="166.93944024148" x2="860" y2="166.93944024148" stroke="#2a3341" stroke-width="1"/>
+<text x="78" y="170.93944024148" text-anchor="end" fill="#8b98a9" font-family="Segoe UI, sans-serif" font-size="12">10 s</text>
+<line x1="90" y1="70" x2="860" y2="70" stroke="#2a3341" stroke-width="1"/>
+<text x="78" y="74" text-anchor="end" fill="#8b98a9" font-family="Segoe UI, sans-serif" font-size="12">100 s</text>
+<rect x="137.25" y="368.510949868428" width="46" height="21.489050131572" rx="4" fill="#7aa2ff"/>
+<rect x="189.25" y="253.318596088684" width="46" height="136.681403911316" rx="4" fill="#4cc2a6"/>
+<text x="160.25" y="360.510949868428" text-anchor="middle" fill="#e6edf3" font-family="Segoe UI, sans-serif" font-size="12">0.08</text>
+<text x="212.25" y="245.318596088684" text-anchor="middle" fill="#e6edf3" font-family="Segoe UI, sans-serif" font-size="12">1.29</text>
+<text x="186.25" y="418" text-anchor="middle" fill="#e6edf3" font-family="Segoe UI, Noto Sans SC, sans-serif" font-size="13">Baseline c1</text>
+<rect x="329.75" y="108.113737570572" width="46" height="281.886262429428" rx="4" fill="#7aa2ff"/>
+<rect x="381.75" y="99.2502743568726" width="46" height="290.749725643127" rx="4" fill="#4cc2a6"/>
+<text x="352.75" y="100.113737570572" text-anchor="middle" fill="#e6edf3" font-family="Segoe UI, sans-serif" font-size="12">40.44</text>
+<text x="404.75" y="91.2502743568726" text-anchor="middle" fill="#e6edf3" font-family="Segoe UI, sans-serif" font-size="12">49.92</text>
+<text x="378.75" y="418" text-anchor="middle" fill="#e6edf3" font-family="Segoe UI, Noto Sans SC, sans-serif" font-size="13">Baseline c4</text>
+<rect x="522.25" y="365.819138945579" width="46" height="24.1808610544209" rx="4" fill="#7aa2ff"/>
+<rect x="574.25" y="300.061443797501" width="46" height="89.9385562024989" rx="4" fill="#4cc2a6"/>
+<text x="545.25" y="357.819138945579" text-anchor="middle" fill="#e6edf3" font-family="Segoe UI, sans-serif" font-size="12">0.09</text>
+<text x="597.25" y="292.061443797501" text-anchor="middle" fill="#e6edf3" font-family="Segoe UI, sans-serif" font-size="12">0.42</text>
+<text x="571.25" y="418" text-anchor="middle" fill="#e6edf3" font-family="Segoe UI, Noto Sans SC, sans-serif" font-size="13">Optimized c1</text>
+<rect x="714.75" y="277.249570799732" width="46" height="112.750429200268" rx="4" fill="#7aa2ff"/>
+<rect x="766.75" y="260.502584895065" width="46" height="129.497415104935" rx="4" fill="#4cc2a6"/>
+<text x="737.75" y="269.249570799732" text-anchor="middle" fill="#e6edf3" font-family="Segoe UI, sans-serif" font-size="12">0.73</text>
+<text x="789.75" y="252.502584895065" text-anchor="middle" fill="#e6edf3" font-family="Segoe UI, sans-serif" font-size="12">1.08</text>
+<text x="763.75" y="418" text-anchor="middle" fill="#e6edf3" font-family="Segoe UI, Noto Sans SC, sans-serif" font-size="13">Optimized c4</text>
+<rect x="300" y="452" width="14" height="14" rx="3" fill="#7aa2ff"/>
+<text x="320" y="464" fill="#8b98a9" font-family="Segoe UI, sans-serif" font-size="12">Median</text>
+<rect x="400" y="452" width="14" height="14" rx="3" fill="#4cc2a6"/>
+<text x="420" y="464" fill="#8b98a9" font-family="Segoe UI, sans-serif" font-size="12">P95</text>
+</svg>
