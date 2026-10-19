@@ -1,5 +1,7 @@
 # ANTLab Infra Tasks
 
+> 本次基础与进阶阶段的作品位于 `basic-task` 分支（标签 `submission-v1`）。入口见该分支的 `SUBMISSION.md`。
+
 ANTLab Infra 方向的开发考核任务。当前包含大模型推理优化的基础任务与进阶任务，围绕 llama.cpp／llama-server 完成系统开发、性能测量和优化验证，并通过 GitHub 提交代码、测试数据和书面报告。
 
 ## 任务入口
