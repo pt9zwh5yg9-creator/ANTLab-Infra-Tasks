@@ -142,6 +142,14 @@ uvicorn src.app:app --host 0.0.0.0 --port 8000
 http://localhost:8000
 ```
 
+对话页：
+
+```text
+http://localhost:8000/chat
+```
+
+对话页支持流式输出和附加一个 UTF-8 文本文件。
+
 ### 6.4 运行固定负载
 
 单并发：

@@ -96,6 +96,11 @@ async def index() -> FileResponse:
     return FileResponse(STATIC_DIR / "index.html")
 
 
+@app.get("/chat")
+async def chat_page() -> FileResponse:
+    return FileResponse(STATIC_DIR / "chat.html")
+
+
 @app.get("/api/status")
 async def service_status() -> dict[str, Any]:
     llama_ok = True

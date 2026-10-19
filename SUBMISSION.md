@@ -37,7 +37,7 @@ source ~/ANTLab-Infra-Tasks/.venv/bin/activate
 uvicorn src.app:app --host 0.0.0.0 --port 8000
 ```
 
-浏览器打开 `http://localhost:8000`。
+浏览器打开 `http://localhost:8000` 查看监控面板，打开 `http://localhost:8000/chat` 直接对话。
 
 ## Advanced Task
 

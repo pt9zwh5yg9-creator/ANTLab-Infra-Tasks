@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>本地 AI 对话</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <div>
+      <h1>本地 AI 对话</h1>
+      <p>文件只在本地读取，模型和 KV 都在 GPU 上运行。</p>
+    </div>
+    <a class="nav-link" href="/">返回监控面板</a>
+  </header>
+
+  <main class="chat-main">
+    <div id="chat-status" class="chat-status">正在检查服务…</div>
+    <div id="chat-log" class="chat-log">
+      <div class="chat-empty">可以问办公、文档或代码问题，也可以附加一个 UTF-8 文本文件。</div>
+    </div>
+
+    <div class="composer">
+      <div class="composer-tools">
+        <label class="file-button">
+          附加文件
+          <input id="file" type="file" accept=".md,.txt,.py,.json,.csv,.html,.js,.css,.yaml,.yml">
+        </label>
+        <span id="file-label" class="muted">未选择文件</span>
+      </div>
+      <textarea id="prompt" rows="3" placeholder="输入问题，Enter 发送，Shift+Enter 换行"></textarea>
+      <div class="composer-actions">
+        <span class="muted">输出上限 1024 tokens；正式测速请用固定负载程序。</span>
+        <button id="send">发送</button>
+      </div>
+    </div>
+  </main>
+  <script src="/static/chat.js"></script>
+</body>
+</html>

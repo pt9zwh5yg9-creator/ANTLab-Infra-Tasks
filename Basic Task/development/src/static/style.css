@@ -123,6 +123,139 @@ button, select {
 button { cursor: pointer; }
 button:hover { border-color: var(--accent); }
 
+.nav-link {
+  color: var(--accent);
+  text-decoration: none;
+  border: 1px solid #2f6f5f;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 14px;
+}
+
+.nav-link:hover { background: #16302a; }
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.chat-main {
+  max-width: 980px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 190px);
+}
+
+.chat-status {
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+.chat-log {
+  flex: 1;
+  min-height: 320px;
+  max-height: 56vh;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  padding: 18px;
+}
+
+.chat-empty {
+  color: var(--muted);
+  text-align: center;
+  padding: 60px 20px;
+  font-size: 14px;
+}
+
+.chat-message {
+  max-width: 86%;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  line-height: 1.65;
+  font-size: 14px;
+}
+
+.chat-message.user {
+  margin-left: auto;
+  background: #1b2b3a;
+  border-color: #2d4d67;
+}
+
+.chat-message.assistant {
+  margin-right: auto;
+  background: var(--panel-2);
+}
+
+.chat-message.error {
+  border-color: #7a3535;
+}
+
+.chat-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.chat-meta {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.composer {
+  margin-top: 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.composer-tools,
+.composer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.composer textarea {
+  width: 100%;
+  margin: 10px 0;
+  padding: 12px;
+  resize: vertical;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.file-button {
+  display: inline-block;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 7px 11px;
+  background: var(--panel-2);
+  font-size: 13px;
+}
+
+.file-button input { display: none; }
+
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
