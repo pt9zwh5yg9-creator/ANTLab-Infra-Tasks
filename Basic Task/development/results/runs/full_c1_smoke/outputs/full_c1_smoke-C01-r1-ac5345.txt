@@ -1,0 +1,113 @@
+### 问题列表
+
+1. **问题：** `parse_time` 函数处理无效时间字符串时未抛出异常。
+   - **触发条件：** 输入无效时间字符串。
+   - **当前行为：** 尝试解析无效时间字符串时会引发 `ValueError`。
+   - **预期行为：** 应该返回 `None` 或其他无效值，避免程序崩溃。
+   - **影响：** 会导致程序崩溃，无法继续处理后续记录。
+   - **最小输入：** `parse_time("invalid")`。
+
+2. **问题：** `summarize_tickets` 函数中 `average` 计算方式不正确。
+   - **触发条件：** 输入包含多个有效耗时的工单。
+   - **当前行为：** `average` 计算方式为 `int(sum(hours) / len(records))`，结果为整数。
+   - **预期行为：** 应该保留两位小数。
+   - **影响：** 会导致平均耗时结果不准确。
+   - **最小输入：** `SAMPLE_RECORDS` 中包含多个有效耗时的工单。
+
+3. **问题：** `summarize_tickets` 函数中 `by_owner` 统计不准确。
+   - **触发条件：** 输入包含多个相同 `id` 的记录。
+   - **当前行为：** 仅统计第一条具有有效 `id` 的记录。
+   - **预期行为：** 应该统计所有具有相同 `id` 的记录。
+   - **影响：** 会导致统计结果不准确。
+   - **最小输入：** `SAMPLE_RECORDS` 中包含多个相同 `id` 的记录。
+
+4. **问题：** `summarize_tickets` 函数中 `by_status` 统计不准确。
+   - **触发条件：** 输入包含状态为 `other` 的记录。
+   - **当前行为：** `by_status` 统计仅包含 `open`、`processing`、`closed` 三种状态。
+   - **预期行为：** 应该包含 `other` 状态。
+   - **影响：** 会导致统计结果不准确。
+   - **最小输入：** `SAMPLE_RECORDS` 中包含状态为 `other` 的记录。
+
+5. **问题：** `summarize_tickets` 函数中 `by_owner` 统计不包含 `total`。
+   - **触发条件：** 输入包含多个记录。
+   - **当前行为：** `by_owner` 中仅包含 `open`、`processing`、`closed`、`other` 四种状态的统计。
+   - **预期行为：** 应该包含 `total`。
+   - **影响：** 会导致统计结果不准确。
+   - **最小输入：** `SAMPLE_RECORDS` 中包含多个记录。
+
+### 修复优先顺序
+
+1. **修复 `parse_time` 函数处理无效时间字符串时未抛出异常的问题。**
+2. **修复 `summarize_tickets` 函数中 `average` 计算方式不正确的问题。**
+3. **修复 `summarize_tickets` 函数中 `by_owner` 统计不准确的问题。**
+4. **修复 `summarize_tickets` 函数中 `by_status` 统计不准确的问题。**
+5. **修复 `summarize_tickets` 函数中 `by_owner` 统计不包含 `total` 的问题。**
+
+### 代码修复
+
+```python
+def parse_time(value):
+    """将时间字符串转换为 datetime。"""
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError:
+        return None
+
+
+def summarize_tickets(records):
+    """按状态、处理人汇总，并计算平均处理耗时。"""
+    by_status = {name: 0 for name in STATUSES}
+    by_owner = {}
+    hours = []
+
+    for record in records:
+        owner = record["owner"]
+        status = record["status"]
+
+        if owner not in by_owner:
+            by_owner[owner] = {
+                "total": 0,
+                "open": 0,
+                "processing": 0,
+                "closed": 0,
+                "other": 0,
+            }
+
+        by_status[status] += 1
+        by_owner[owner]["total"] += 1
+        by_owner[owner][status] += 1
+
+        if record.get("closed_at"):
+            hours.append(ticket_hours(record))
+        else:
+            hours.append(0)
+
+    average = sum(hours) / len(hours) if hours else None
+
+    return {
+        "total": len(records),
+        "by_status": by_status,
+        "by_owner": by_owner,
+        "average_closed_hours": average,
+    }
+```
+
+### 测试用例
+
+```python
+def test_parse_time():
+    assert parse_time("2026-10-12T09:00:00+08:00") is not None
+    assert parse_time("invalid") is None
+
+
+def test_summarize_tickets():
+    summary = summarize_tickets(SAMPLE_RECORDS)
+    assert summary["total"] == 5
+    assert summary["by_status"]["closed"] == 2
+    assert summary["by_status"]["processing"] == 1
+    assert summary["by_status"]["open"] == 1
+    assert summary["by_status"]["other"] == 1
+    assert summary["by_owner"]["Chen"]["total"] == 2
+    assert summary["by_owner"]["Chen"]["closed"] == 2
+    assert summary["by_owner"]["Song"]["total"] == 1
+    assert summary["by_owner"]["Song"]["

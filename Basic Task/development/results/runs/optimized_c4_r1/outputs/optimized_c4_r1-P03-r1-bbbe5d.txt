@@ -1,0 +1,69 @@
+```python
+def aggregate_by_owner(records):
+    """
+    统计记录按处理人分类的总数，以及 open、processing、closed 三种状态的数量。
+    :param records: 字典列表，每条记录包含 'owner' 和 'status'
+    :return: 字典，包含按处理人分类的统计结果
+    """
+    if not records:
+        return {}
+
+    result = {
+        'unassigned': {'total': 0, 'open': 0, 'processing': 0, 'closed': 0, 'other': 0},
+        'open': 0,
+        'processing': 0,
+        'closed': 0,
+        'other': 0
+    }
+
+    for record in records:
+        owner = record.get('owner', 'unassigned').lower()
+        status = record.get('status', '').lower()
+
+        if owner not in result:
+            result[owner] = {'total': 0, 'open': 0, 'processing': 0, 'closed': 0, 'other': 0}
+
+        result[owner]['total'] += 1
+        if status == 'open':
+            result[owner]['open'] += 1
+        elif status == 'processing':
+            result[owner]['processing'] += 1
+        elif status == 'closed':
+            result[owner]['closed'] += 1
+        else:
+            result[owner]['other'] += 1
+
+    return result
+
+# 测试示例
+test_records = [
+    {'owner': 'Alice', 'status': 'Open'},
+    {'owner': 'Bob', 'status': 'Processing'},
+    {'owner': 'Alice', 'status': 'Closed'},
+    {'owner': 'Charlie', 'status': 'Open'},
+    {'owner': 'Alice', 'status': 'Other'},
+    {'owner': '', 'status': 'Open'},
+    {'owner': 'Bob', 'status': 'Closed'},
+    {'owner': 'Alice', 'status': 'Processing'},
+    {'owner': 'Charlie', 'status': 'Processing'},
+    {'owner': 'Bob', 'status': 'Other'}
+]
+
+print(aggregate_by_owner(test_records))
+```
+
+### 事实
+- 函数 `aggregate_by_owner` 使用 Python 标准库实现。
+- 输入是字典列表，每条记录包含 `owner` 和 `status`。
+- 函数按处理人统计总数，以及 open、processing、closed 三种状态的数量。
+- 状态匹配忽略大小写。
+- 缺失或为空的 `owner` 归为 `unassigned`。
+- 未知状态计入 `other`。
+- 输入为空时返回空字典。
+
+### 测试示例
+1. Alice 有 3 条记录，其中 1 个 open, 1 个 closed, 1 个 other。
+2. Bob 有 3 条记录，其中 1 个 processing, 1 个 closed, 1 个 other。
+3. Charlie 有 2 条记录，全部为 processing。
+4. unassigned 有 1 条记录，为 open。
+5. 空输入返回空字典。

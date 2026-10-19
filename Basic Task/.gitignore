@@ -1,0 +1,43 @@
+# 本地模型与推理引擎
+/models/
+/llama.cpp/
+/development/models/
+/development/vendor/llama.cpp/
+*.gguf
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+
+# 环境、依赖和构建产物
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+node_modules/
+build/
+dist/
+target/
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+
+# 临时状态、KV 快照和本地配置
+.cache/
+.runtime/
+kv_cache/
+*.kv
+*.tmp
+.env
+.env.*
+!.env.example
+
+# 编辑器与系统文件
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# development/results 中的测试日志、JSON、JSONL、CSV 和报告应提交

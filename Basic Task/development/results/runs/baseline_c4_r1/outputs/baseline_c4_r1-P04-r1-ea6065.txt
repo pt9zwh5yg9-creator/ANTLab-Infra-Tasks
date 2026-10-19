@@ -1,0 +1,137 @@
+### 任务处理方案设计
+
+#### 1. 任务状态
+任务状态需要记录任务的执行情况，包括任务的唯一标识、执行状态（成功、失败、进行中）、重试次数、最后执行时间等信息。这些状态信息需要持久化存储，以便在程序重启后恢复。
+
+#### 2. 去重方式
+为了防止重复执行任务，可以使用一个全局的去重机制。可以使用一个文件或数据库来存储已经执行过的任务的唯一标识。每次执行任务前，检查该标识是否已经存在于去重文件中。
+
+#### 3. 重试上限
+设定一个重试上限，例如重试3次后仍然失败，则不再重试。可以通过任务状态中的重试次数字段来控制。
+
+#### 4. 持久化
+使用文件系统来持久化任务状态。可以使用 JSON 文件来存储任务状态信息。这样可以在程序重启后从文件中读取任务状态。
+
+#### 5. 重启恢复流程
+在程序重启后，从持久化文件中读取任务状态，恢复任务的执行状态。如果任务失败，则根据重试上限决定是否继续重试。
+
+### 核心代码示例
+
+```python
+import json
+import os
+import time
+
+# 任务状态文件路径
+STATUS_FILE = 'task_status.json'
+
+# 任务状态类
+class TaskStatus:
+    def __init__(self, task_id, status='pending', retries=0, last_exec_time=None):
+        self.task_id = task_id
+        self.status = status
+        self.retries = retries
+        self.last_exec_time = last_exec_time
+
+    def to_dict(self):
+        return {
+            'task_id': self.task_id,
+            'status': self.status,
+            'retries': self.retries,
+            'last_exec_time': self.last_exec_time
+        }
+
+    @staticmethod
+    def from_dict(data):
+        return TaskStatus(
+            task_id=data['task_id'],
+            status=data['status'],
+            retries=data['retries'],
+            last_exec_time=data['last_exec_time']
+        )
+
+# 任务去重类
+class TaskDeduplication:
+    def __init__(self, dedup_file='dedup_file.txt'):
+        self.dedup_file = dedup_file
+
+    def add_task(self, task_id):
+        with open(self.dedup_file, 'a') as f:
+            f.write(task_id + '\n')
+
+    def is_duplicate(self, task_id):
+        with open(self.dedup_file, 'r') as f:
+            for line in f:
+                if line.strip() == task_id:
+                    return True
+        return False
+
+# 任务处理类
+class TaskProcessor:
+    def __init__(self, task_id, task_dedup, max_retries=3):
+        self.task_id = task_id
+        self.task_dedup = task_dedup
+        self.max_retries = max_retries
+        self.load_status()
+
+    def load_status(self):
+        if os.path.exists(STATUS_FILE):
+            with open(STATUS_FILE, 'r') as f:
+                data = json.load(f)
+                self.status = TaskStatus.from_dict(data)
+        else:
+            self.status = TaskStatus(self.task_id)
+
+    def save_status(self):
+        with open(STATUS_FILE, 'w') as f:
+            json.dump(self.status.to_dict(), f)
+
+    def process_task(self):
+        if self.task_dedup.is_duplicate(self.task_id):
+            print(f"Task {self.task_id} is a duplicate, skipping.")
+            return
+
+        self.status.status = 'executing'
+        self.status.retries = 0
+        self.status.last_exec_time = time.time()
+
+        # 模拟任务执行
+        if self.execute_task():
+            self.status.status = 'success'
+        else:
+            self.status.status = 'failure'
+            self.status.retries += 1
+
+            if self.status.retries < self.max_retries:
+                print(f"Task {self.task_id} failed, retrying ({self.status.retries}/{self.max_retries})...")
+                self.process_task()
+            else:
+                print(f"Task {self.task_id} failed after {self.max_retries} retries, giving up.")
+
+    def execute_task(self):
+        # 模拟任务执行
+        time.sleep(1)  # 模拟任务执行时间
+        return True  # 假设任务执行成功
+
+# 主函数
+def main():
+    task_id = 'task_123'
+    task_dedup = TaskDeduplication()
+    processor = TaskProcessor(task_id, task_dedup)
+    processor.process_task()
+
+if __name__ == '__main__':
+    main()
+```
+
+### 说明
+1. `TaskStatus` 类用于表示任务的状态。
+2. `TaskDeduplication` 类用于处理任务的去重。
+3. `TaskProcessor` 类用于处理任务的执行流程，包括加载状态、执行任务、保存状态等。
+4. `execute_task` 方法用于模拟任务的执行，这里简单地使用 `time.sleep` 来模拟任务执行时间。
+5. `main` 函数是程序的入口，用于启动任务处理流程。
+
+### 建议
+1. 可以考虑使用数据库来持久化任务状态，这样可以提高性能和可靠性。
+2. 可以增加日志记录功能，以便更好地跟踪任务的执行情况。
+3. 可以增加任务执行的超时机制，防止任务长时间运行导致资源浪费。

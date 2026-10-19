@@ -1,0 +1,103 @@
+### 任务状态设计
+
+任务状态可以使用字典来存储，每个任务的唯一标识作为键，状态信息作为值。状态信息可以包括任务的执行状态（如成功、失败、进行中）、重试次数、上次执行时间等。
+
+### 去重方式
+
+使用一个集合来存储已经执行过的任务ID，确保每个任务只执行一次。
+
+### 重试上限
+
+设置一个重试上限，例如重试3次后仍然失败则放弃该任务。
+
+### 持久化
+
+使用 `pickle` 模块将任务状态信息序列化到文件中，以便在程序重启后恢复状态。
+
+### 重启恢复流程
+
+在程序启动时，读取任务状态文件，恢复任务状态信息。
+
+### 核心代码示例
+
+```python
+import os
+import pickle
+import time
+
+# 任务状态存储文件路径
+STATUS_FILE = 'task_status.pkl'
+
+# 任务状态字典
+task_status = {}
+
+# 任务去重集合
+seen_tasks = set()
+
+def load_task_status():
+    """从文件加载任务状态"""
+    if os.path.exists(STATUS_FILE):
+        with open(STATUS_FILE, 'rb') as f:
+            global task_status
+            task_status = pickle.load(f)
+            print("恢复任务状态：", task_status)
+    else:
+        print("未找到任务状态文件")
+
+def save_task_status():
+    """保存任务状态到文件"""
+    with open(STATUS_FILE, 'wb') as f:
+        pickle.dump(task_status, f)
+    print("保存任务状态：", task_status)
+
+def process_task(task_id):
+    """处理单个任务"""
+    if task_id in seen_tasks:
+        print(f"任务 {task_id} 已经执行过，跳过")
+        return
+
+    seen_tasks.add(task_id)
+    print(f"开始处理任务 {task_id}")
+
+    # 模拟任务执行
+    success = execute_task(task_id)
+    if success:
+        task_status[task_id] = {'status': 'success', 'retry_count': 0}
+        print(f"任务 {task_id} 处理成功")
+    else:
+        task_status[task_id] = {'status': 'failure', 'retry_count': 0}
+        print(f"任务 {task_id} 处理失败，将重试")
+
+def execute_task(task_id):
+    """模拟任务执行"""
+    # 这里可以替换为实际的任务执行逻辑
+    time.sleep(1)  # 模拟任务执行时间
+    return True  # 假设任务总是成功
+
+def retry_task(task_id):
+    """重试失败的任务"""
+    if task_id in task_status and task_status[task_id]['status'] == 'failure':
+        task_status[task_id]['retry_count'] += 1
+        if task_status[task_id]['retry_count'] < 3:  # 重试上限为3次
+            process_task(task_id)
+        else:
+            print(f"任务 {task_id} 重试失败，放弃")
+            task_status[task_id]['status'] = 'failed'
+
+def main():
+    load_task_status()
+    process_task('task1')
+    retry_task('task1')
+    save_task_status()
+
+if __name__ == '__main__':
+    main()
+```
+
+### 说明
+
+1. **任务状态**：使用 `task_status` 字典存储每个任务的状态信息。
+2. **去重**：使用 `seen_tasks` 集合存储已经执行过的任务ID。
+3. **重试**：在 `retry_task` 函数中实现重试逻辑，最多重试3次。
+4. **持久化**：使用 `pickle` 模块将任务状态保存到文件中，并在程序启动时恢复状态。
+5. **重启恢复**：在程序启动时调用 `load_task_status` 函数恢复任务状态，确保在程序重启后能够恢复到上次的状态。

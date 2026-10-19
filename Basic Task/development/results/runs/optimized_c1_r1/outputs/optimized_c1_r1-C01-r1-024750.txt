@@ -1,0 +1,85 @@
+### 问题列表
+
+1. **问题：** `parse_time` 函数处理无效时间字符串时未抛出异常。
+   - **触发条件：** 输入无效时间字符串。
+   - **当前行为：** 尝试解析无效时间字符串时会引发 `ValueError`。
+   - **预期行为：** 应该捕获 `ValueError` 并返回 `None` 或其他适当值。
+   - **影响：** 会导致程序崩溃或返回错误结果。
+   - **最小输入：** `parse_time("invalid")`。
+
+2. **问题：** `ticket_hours` 函数计算耗时时未处理 `ValueError`。
+   - **触发条件：** 输入无效时间字符串。
+   - **当前行为：** 尝试解析无效时间字符串时会引发 `ValueError`。
+   - **预期行为：** 应该捕获 `ValueError` 并返回 `0` 或其他适当值。
+   - **影响：** 会导致程序崩溃或返回错误结果。
+   - **最小输入：** `ticket_hours({"created_at": "2026-10-12T09:00:00+08:00", "closed_at": "invalid"})`。
+
+3. **问题：** `summarize_tickets` 函数中 `average` 计算未考虑 `hours` 列表为空的情况。
+   - **触发条件：** 输入仅包含没有有效耗时的工单。
+   - **当前行为：** `average` 会计算 `hours` 列表的平均值，即使列表为空。
+   - **预期行为：** 应该返回 `None`。
+   - **影响：** 会导致返回错误的平均耗时。
+   - **最小输入：** `summarize_tickets([{"created_at": "2026-10-12T09:00:00+08:00", "closed_at": None}])`。
+
+4. **问题：** `summarize_tickets` 函数中 `by_owner` 的统计未考虑 `owner` 为空字符串、`None` 或只含空格的情况。
+   - **触发条件：** 输入包含 `owner` 为空字符串、`None` 或只含空格的记录。
+   - **当前行为：** `by_owner` 会将这些记录归为 `unassigned`。
+   - **预期行为：** 应该将这些记录归为 `unassigned`。
+   - **影响：** 会导致统计结果不准确。
+   - **最小输入：** `summarize_tickets([{"id": "T001", "owner": "", "status": "closed", "created_at": "2026-10-12T09:00:00+08:00", "closed_at": "2026-10-12T11:30:00+08:00"}])`。
+
+5. **问题：** `summarize_tickets` 函数中 `by_status` 的统计未考虑 `status` 为空字符串、`None` 或只含空格的情况。
+   - **触发条件：** 输入包含 `status` 为空字符串、`None` 或只含空格的记录。
+   - **当前行为：** `by_status` 会将这些记录归为 `other`。
+   - **预期行为：** 应该将这些记录归为 `other`。
+   - **影响：** 会导致统计结果不准确。
+   - **最小输入：** `summarize_tickets([{"id": "T001", "owner": "Chen", "status": "", "created_at": "2026-10-12T09:00:00+08:00", "closed_at": "2026-10-12T11:30:00+08:00"}])`。
+
+### 修复优先顺序
+
+1. **修复 `parse_time` 和 `ticket_hours` 函数中的异常处理**。
+2. **修复 `summarize_tickets` 函数中的 `average` 计算**。
+3. **修复 `summarize_tickets` 函数中的 `by_owner` 和 `by_status` 统计**。
+
+### 代码修复
+
+```python
+def parse_time(value):
+    """将时间字符串转换为 datetime。"""
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError:
+        return None
+
+
+def ticket_hours(record):
+    """读取一条工单的处理耗时，单位为小时。"""
+    start = parse_time(record["created_at"])
+    end = parse_time(record["closed_at"])
+    if start is None or end is None:
+        return 0
+    return (end - start).total_seconds() / 3600
+
+
+def summarize_tickets(records):
+    """按状态、处理人汇总，并计算平均处理耗时。"""
+    by_status = {name: 0 for name in STATUSES}
+    by_owner = {}
+    hours = []
+
+    for record in records:
+        owner = record["owner"]
+        status = record["status"]
+
+        if owner not in by_owner:
+            by_owner[owner] = {
+                "total": 0,
+                "open": 0,
+                "processing": 0,
+                "closed": 0,
+                "other": 0,
+            }
+
+        by_status[status] += 1
+        by_owner[owner]["total"] += 1
+        by_owner[owner

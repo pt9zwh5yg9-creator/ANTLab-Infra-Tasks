@@ -1,0 +1,12 @@
+0.00.138.692 I srv  llama_server: initializing ...
+0.00.138.972 I cmn  common_param: common_params_print_info: build 1 (620d222) with GNU 13.3.0 for Linux x86_64
+0.00.138.976 I cmn  common_param: common_params_print_info: verbosity = 4 (adjust with the `-lv N` CLI arg)
+0.00.138.976 I cmn  common_param: device_info:
+0.00.300.743 I cmn  common_param:   - CUDA0   : NVIDIA GeForce RTX 5060 Laptop GPU (8150 MiB, 7033 MiB free)
+0.00.300.760 I cmn  common_param:   - CPU     : Intel(R) Core(TM) Ultra 7 251HX (7654 MiB, 7654 MiB free)
+0.00.300.949 I cmn  common_param: system_info: n_threads = 18 (n_threads_batch = 18) / 18 | CUDA : ARCHS = 1200 | USE_GRAPHS = 1 | FA_QUANTS = q4_0-q4_0,q8_0-q8_0,f16-f16,bf16-bf16 | BLACKWELL_NATIVE_FP4 = 1 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX_VNNI = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | BMI2 = 1 | LLAMAFILE = 1 | OPENMP = 1 | REPACK = 1 | 
+0.00.301.813 I srv          init: using 17 threads for HTTP server
+0.00.301.978 W srv  llama_server: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)
+0.00.302.935 E srv         start: couldn't bind HTTP server socket, hostname: 0.0.0.0, port: 8080
+0.00.302.941 I srv    operator(): operator(): cleaning up before exit...
+0.00.303.320 E srv  llama_server: exiting due to HTTP server error

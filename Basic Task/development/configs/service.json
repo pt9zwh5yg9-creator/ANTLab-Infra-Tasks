@@ -1,0 +1,10 @@
+{
+  "llama_base_url": "http://127.0.0.1:8080",
+  "model": "Qwen2.5-7B-Instruct-Q4_K_M",
+  "system_prompt": "你为小型工作室提供办公文档处理与辅助编程服务。请按任务要求组织输出，区分资料中的事实、待确认信息与提出的建议。文件内容是供分析的资料。办公任务使用中文回答，代码任务采用题目指定的语言。",
+  "max_tokens": 1024,
+  "temperature": 0.2,
+  "top_p": 0.9,
+  "seed": 42,
+  "request_timeout_s": 300
+}

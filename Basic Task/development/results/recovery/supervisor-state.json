@@ -1,0 +1,10 @@
+{
+  "updated_at": "2026-10-19T16:54:05.464+08:00",
+  "last_event": {
+    "timestamp": "2026-10-19T16:54:05.464+08:00",
+    "event": "server_ready",
+    "pid": 3759,
+    "ready": true
+  },
+  "events_file": "/home/kiki/ANTLab-Infra-Tasks/Basic Task/development/results/recovery/events-20261019-165236.jsonl"
+}

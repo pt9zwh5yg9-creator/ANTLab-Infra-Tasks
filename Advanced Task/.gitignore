@@ -1,0 +1,43 @@
+# 本地模型和推理引擎
+/models/
+/llama.cpp/
+/development/models/
+/development/vendor/
+*.gguf
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+
+# 环境、依赖、构建文件
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+node_modules/
+build/
+dist/
+target/
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+
+# 运行状态和大型缓存文件
+.cache/
+.runtime/
+kv_cache/
+*.kv
+*.tmp
+.env
+.env.*
+!.env.example
+
+# 编辑器和系统文件
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# 正式结果、事件日志、缓存索引样例和报告提交到 development/

@@ -1,0 +1,95 @@
+```python
+def aggregate_by_owner(records):
+    """
+    统计记录按处理人分类的总数及不同状态的数量。
+    
+    :param records: 包含 'owner' 和 'status' 的字典列表
+    :return: 一个字典，包含按处理人分类的统计结果
+    """
+    if not records:
+        return {}
+    
+    result = {}
+    for record in records:
+        owner = record.get('owner', 'unassigned').lower()
+        status = record.get('status', '').lower()
+        
+        if owner not in result:
+            result[owner] = {
+                'total': 0,
+                'open': 0,
+                'processing': 0,
+                'closed': 0,
+                'other': 0
+            }
+        
+        result[owner]['total'] += 1
+        if status == 'open':
+            result[owner]['open'] += 1
+        elif status == 'processing':
+            result[owner]['processing'] += 1
+        elif status == 'closed':
+            result[owner]['closed'] += 1
+        else:
+            result[owner]['other'] += 1
+    
+    return result
+
+# 测试示例
+test_records = [
+    {'owner': 'Alice', 'status': 'Open'},
+    {'owner': 'Bob', 'status': 'Processing'},
+    {'owner': 'Alice', 'status': 'Closed'},
+    {'owner': 'Charlie', 'status': 'open'},
+    {'owner': 'Alice', 'status': 'closed'},
+    {'owner': 'Bob', 'status': 'closed'},
+    {'owner': 'Alice', 'status': 'Other'},
+    {'owner': 'Bob', 'status': 'Other'},
+    {'owner': 'Charlie', 'status': 'Other'},
+    {'owner': '', 'status': 'Open'},
+    {'owner': 'Alice', 'status': ''},
+    {'owner': 'Bob', 'status': 'closed'}
+]
+
+print(aggregate_by_owner(test_records))
+```
+
+### 测试示例
+1. 空列表：
+   ```python
+   print(aggregate_by_owner([]))  # 输出: {}
+   ```
+
+2. 所有状态都不同：
+   ```python
+   print(aggregate_by_owner([
+       {'owner': 'Alice', 'status': 'Open'},
+       {'owner': 'Bob', 'status': 'Processing'},
+       {'owner': 'Charlie', 'status': 'Closed'}
+   ]))  # 输出: {'alice': {'total': 1, 'open': 1, 'processing': 0, 'closed': 0, 'other': 0}, 'bob': {'total': 1, 'open': 0, 'processing': 1, 'closed': 0, 'other': 0}, 'charlie': {'total': 1, 'open': 0, 'processing': 0, 'closed': 1, 'other': 0}}
+   ```
+
+3. 状态匹配忽略大小写：
+   ```python
+   print(aggregate_by_owner([
+       {'owner': 'Alice', 'status': 'open'},
+       {'owner': 'Bob', 'status': 'Processing'},
+       {'owner': 'Alice', 'status': 'closed'}
+   ]))  # 输出: {'alice': {'total': 2, 'open': 1, 'processing': 0, 'closed': 1, 'other': 0}, 'bob': {'total': 1, 'open': 0, 'processing': 1, 'closed': 0, 'other': 0}}
+   ```
+
+4. 缺失或为空的 owner 归为 unassigned：
+   ```python
+   print(aggregate_by_owner([
+       {'owner': '', 'status': 'Open'},
+       {'owner': 'Alice', 'status': 'Closed'}
+   ]))  # 输出: {'unassigned': {'total': 1, 'open': 1, 'processing': 0, 'closed': 0, 'other': 0}, 'alice': {'total': 1, 'open': 0, 'processing': 0, 'closed': 1, 'other': 0}}
+   ```
+
+5. 未知状态计入 other：
+   ```python
+   print(aggregate_by_owner([
+       {'owner': 'Alice', 'status': 'Unknown'},
+       {'owner': 'Bob', 'status': 'Other'}
+   ]))  # 输出: {'alice': {'total': 1, 'open': 0, 'processing': 0, 'closed': 0, 'other': 1}, 'bob': {'total': 1, 'open': 0, 'processing': 0, 'closed': 0, 'other': 1}}
+   ```

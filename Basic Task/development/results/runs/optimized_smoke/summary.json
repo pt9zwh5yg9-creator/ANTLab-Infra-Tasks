@@ -1,0 +1,41 @@
+{
+  "total": 3,
+  "success": 3,
+  "failed": 0,
+  "timeout": 0,
+  "ttft_median_s": 1.3687560740000038,
+  "ttft_p95_s": 2.1728594660000056,
+  "latency_median_s": 21.428961242,
+  "latency_p95_s": 43.031597307,
+  "tpot_median_s": 0.022815286464454968,
+  "output_tokens": 3232,
+  "window_s": 44.51857399940491,
+  "throughput_tokens_per_s": 72.59891118801791,
+  "by_prompt": {
+    "P01": {
+      "total": 1,
+      "success": 1,
+      "failed": 0,
+      "timeout": 0,
+      "ttft_median_s": 0.5608391229999938,
+      "ttft_p95_s": 0.5608391229999938
+    },
+    "D01": {
+      "total": 1,
+      "success": 1,
+      "failed": 0,
+      "timeout": 0,
+      "ttft_median_s": 2.1728594660000056,
+      "ttft_p95_s": 2.1728594660000056
+    },
+    "C02": {
+      "total": 1,
+      "success": 1,
+      "failed": 0,
+      "timeout": 0,
+      "ttft_median_s": 1.3687560740000038,
+      "ttft_p95_s": 1.3687560740000038
+    }
+  },
+  "completed_at": "2026-10-19T16:24:32.529+08:00"
+}

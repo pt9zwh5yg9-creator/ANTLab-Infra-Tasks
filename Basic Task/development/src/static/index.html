@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ANTLab 本地推理服务</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <div>
+      <h1>ANTLab 本地推理服务</h1>
+      <p>Qwen2.5-7B-Instruct · llama.cpp · RTX 5060 Laptop</p>
+    </div>
+    <span id="last-updated" class="muted"></span>
+  </header>
+
+  <main>
+    <section id="status" class="cards"></section>
+
+    <nav class="tabs">
+      <button data-tab="runs" class="active">运行记录</button>
+      <button data-tab="compare">基线对比</button>
+      <button data-tab="recovery">恢复记录</button>
+    </nav>
+
+    <section id="tab-runs" class="tab active">
+      <div class="toolbar">
+        <button id="refresh">刷新数据</button>
+        <span class="muted">点击“查看请求”可以看到逐请求指标和模型输出。</span>
+      </div>
+      <div id="runs-table" class="panel"></div>
+      <div id="run-detail" class="panel hidden"></div>
+    </section>
+
+    <section id="tab-compare" class="tab">
+      <div class="toolbar">
+        <select id="compare-a"></select>
+        <span class="muted">vs</span>
+        <select id="compare-b"></select>
+        <button id="compare-run">对比</button>
+      </div>
+      <div id="compare-content" class="panel"></div>
+    </section>
+
+    <section id="tab-recovery" class="tab">
+      <div id="recovery-content" class="panel">
+        <p class="muted">服务恢复测试记录会显示在这里。</p>
+      </div>
+    </section>
+  </main>
+
+  <div id="modal" class="modal hidden">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h2 id="modal-title">模型输出</h2>
+        <button id="modal-close">关闭</button>
+      </div>
+      <pre id="modal-content"></pre>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

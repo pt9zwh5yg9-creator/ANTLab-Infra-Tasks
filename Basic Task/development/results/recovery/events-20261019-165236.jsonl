@@ -1,0 +1,8 @@
+{"timestamp": "2026-10-19T16:52:36.520+08:00", "event": "supervisor_start", "command": ["/home/kiki/llama.cpp/build/bin/llama-server", "-m", "/home/kiki/models/Qwen2.5-7B-Instruct-GGUF/qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf", "-ngl", "99", "-c", "32768", "-np", "4", "-cram", "0", "-fa", "on", "-ctk", "q8_0", "-ctv", "q8_0", "-lv", "4", "--host", "0.0.0.0", "--port", "8080", "-cb"], "config": {"name": "optimized", "model": "~/models/Qwen2.5-7B-Instruct-GGUF/qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf", "n_gpu_layers": 99, "ctx_size": 32768, "parallel": 4, "cont_batching": true, "flash_attn": "on", "cache_type_k": "q8_0", "cache_type_v": "q8_0", "cache_ram": 0, "host": "0.0.0.0", "port": 8080, "verbosity": 4}, "server_log": "/home/kiki/logs/supervisor-server-20261019-165236.log"}
+{"timestamp": "2026-10-19T16:52:36.522+08:00", "event": "server_start", "pid": 3718, "restart_count": 0}
+{"timestamp": "2026-10-19T16:52:54.138+08:00", "event": "server_ready", "pid": 3718, "ready": true}
+{"timestamp": "2026-10-19T16:53:53.176+08:00", "event": "health_check_failed", "pid": 3718, "consecutive_failures": 1}
+{"timestamp": "2026-10-19T16:53:53.178+08:00", "event": "server_exit", "pid": 3718, "exit_code": -9}
+{"timestamp": "2026-10-19T16:53:53.179+08:00", "event": "restart_scheduled", "restart_count": 1, "backoff_s": 2.0}
+{"timestamp": "2026-10-19T16:53:55.189+08:00", "event": "server_start", "pid": 3759, "restart_count": 1}
+{"timestamp": "2026-10-19T16:54:05.464+08:00", "event": "server_ready", "pid": 3759, "ready": true}

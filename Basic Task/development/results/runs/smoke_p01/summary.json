@@ -1,0 +1,25 @@
+{
+  "total": 1,
+  "success": 1,
+  "failed": 0,
+  "timeout": 0,
+  "ttft_median_s": 0.3012852369997745,
+  "ttft_p95_s": 0.3012852369997745,
+  "latency_median_s": 4.508472868999888,
+  "latency_p95_s": 4.508472868999888,
+  "tpot_median_s": 0.019752054610329174,
+  "output_tokens": 214,
+  "window_s": 4.508473634719849,
+  "throughput_tokens_per_s": 47.46617532638576,
+  "by_prompt": {
+    "P01": {
+      "total": 1,
+      "success": 1,
+      "failed": 0,
+      "timeout": 0,
+      "ttft_median_s": 0.3012852369997745,
+      "ttft_p95_s": 0.3012852369997745
+    }
+  },
+  "completed_at": "2026-10-18T22:16:44.796+08:00"
+}

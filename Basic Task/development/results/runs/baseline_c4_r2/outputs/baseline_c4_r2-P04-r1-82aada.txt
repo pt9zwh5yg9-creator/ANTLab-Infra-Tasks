@@ -1,0 +1,88 @@
+### 任务处理方案设计
+
+#### 1. 任务状态
+任务状态需要记录任务的执行情况，包括任务的唯一标识、执行状态（成功、失败、进行中）、重试次数、最后执行时间等信息。可以使用字典来存储这些信息。
+
+#### 2. 去重方式
+使用任务的唯一标识来去重，确保同一任务不会被重复执行。唯一标识可以是任务的ID或者任务的参数组合。
+
+#### 3. 重试上限
+设定一个重试上限，例如重试3次后仍然失败，则不再重试。可以通过任务状态中的重试次数来控制。
+
+#### 4. 持久化
+使用文件来持久化任务状态，可以使用JSON格式来存储字典。这样即使程序重启，也可以从文件中恢复任务状态。
+
+#### 5. 重启恢复流程
+在程序重启时，从文件中读取任务状态，恢复到程序中继续执行。
+
+### 核心代码示例
+
+```python
+import json
+import os
+import time
+
+# 任务状态存储文件路径
+STATUS_FILE = 'task_status.json'
+
+def load_task_status():
+    """从文件加载任务状态"""
+    if os.path.exists(STATUS_FILE):
+        with open(STATUS_FILE, 'r') as f:
+            return json.load(f)
+    return {}
+
+def save_task_status(task_status):
+    """保存任务状态到文件"""
+    with open(STATUS_FILE, 'w') as f:
+        json.dump(task_status, f)
+
+def process_task(task_id, task_func):
+    """处理单个任务"""
+    task_status = load_task_status()
+    
+    if task_id in task_status and task_status[task_id]['status'] == 'success':
+        print(f"Task {task_id} has already been completed.")
+        return
+    
+    if task_id in task_status and task_status[task_id]['status'] == 'failed':
+        retries = task_status[task_id]['retries']
+        if retries >= 3:
+            print(f"Task {task_id} failed too many times, will not retry.")
+            return
+        retries += 1
+        task_status[task_id]['retries'] = retries
+        task_status[task_id]['status'] = 'retrying'
+    else:
+        task_status[task_id] = {'status': 'processing', 'retries': 0}
+    
+    try:
+        result = task_func()
+        task_status[task_id]['status'] = 'success'
+        task_status[task_id]['result'] = result
+        print(f"Task {task_id} completed successfully.")
+    except Exception as e:
+        task_status[task_id]['status'] = 'failed'
+        task_status[task_id]['error'] = str(e)
+        print(f"Task {task_id} failed: {e}")
+    
+    save_task_status(task_status)
+
+def example_task():
+    """示例任务函数"""
+    time.sleep(2)  # 模拟耗时操作
+    return "Task result"
+
+# 主函数
+if __name__ == "__main__":
+    task_id = "12345"
+    process_task(task_id, example_task)
+```
+
+### 说明
+1. `load_task_status` 函数从文件中加载任务状态。
+2. `save_task_status` 函数将任务状态保存到文件中。
+3. `process_task` 函数处理单个任务，包括检查任务状态、执行任务、记录结果或错误。
+4. `example_task` 函数是一个简单的示例任务函数，用于演示任务处理流程。
+
+通过上述方案和代码示例，可以实现单机环境下任务的去重、重试控制和持久化存储。

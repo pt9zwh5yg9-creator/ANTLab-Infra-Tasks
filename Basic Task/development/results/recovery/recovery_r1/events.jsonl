@@ -1,0 +1,3 @@
+{"timestamp": "2026-10-19T16:53:52.027+08:00", "event": "kill_requested", "delay_s": 4.0, "pids": [3718]}
+{"timestamp": "2026-10-19T16:53:52.028+08:00", "event": "kill_sent", "pid": 3718, "signal": "SIGKILL"}
+{"timestamp": "2026-10-19T16:54:04.784+08:00", "event": "recovery_health_ok", "recovery_s": 12.755892753601074}

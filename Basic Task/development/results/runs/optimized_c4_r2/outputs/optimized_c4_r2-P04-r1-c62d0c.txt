@@ -1,0 +1,106 @@
+### 任务处理方案设计
+
+#### 1. 任务状态
+任务状态需要记录在数据库中，以确保任务的唯一性和状态的一致性。我们可以使用 SQLite 作为本地数据库，因为它不需要额外的安装，并且可以方便地进行数据持久化。
+
+#### 2. 去重方式
+为了防止任务重复执行，我们可以使用一个唯一的标识符来标记任务。例如，任务的唯一标识符可以是任务的 ID，或者任务的参数组合。
+
+#### 3. 重试上限
+为了防止任务失败后无限重试，我们需要设置一个重试上限。例如，可以设置重试上限为 3 次。
+
+#### 4. 持久化
+任务的状态需要持久化到数据库中，以便在程序重启后能够恢复任务状态。
+
+#### 5. 重启恢复流程
+在程序重启后，需要检查任务的状态，根据任务的状态来决定是否重新执行任务。
+
+### 核心代码示例
+
+```python
+import sqlite3
+import time
+from threading import Lock
+
+# 数据库连接
+db_lock = Lock()
+conn = sqlite3.connect('task.db')
+c = conn.cursor()
+
+# 创建任务表
+c.execute('''
+CREATE TABLE IF NOT EXISTS tasks (
+    id INTEGER PRIMARY KEY,
+    task_id TEXT,
+    status TEXT,
+    retries INTEGER,
+    last_exec_time INTEGER
+)
+''')
+conn.commit()
+
+def add_task(task_id, status='PENDING', retries=0, last_exec_time=int(time.time())):
+    with db_lock:
+        c.execute('''
+        INSERT INTO tasks (task_id, status, retries, last_exec_time)
+        VALUES (?, ?, ?, ?)
+        ''', (task_id, status, retries, last_exec_time))
+        conn.commit()
+
+def update_task(task_id, status, retries, last_exec_time):
+    with db_lock:
+        c.execute('''
+        UPDATE tasks
+        SET status = ?, retries = ?, last_exec_time = ?
+        WHERE task_id = ?
+        ''', (status, retries, last_exec_time, task_id))
+        conn.commit()
+
+def get_task(task_id):
+    with db_lock:
+        c.execute('SELECT * FROM tasks WHERE task_id = ?', (task_id,))
+        return c.fetchone()
+
+def process_task(task_id):
+    task = get_task(task_id)
+    if task is None:
+        add_task(task_id)
+        task = get_task(task_id)
+    
+    if task[2] == 'COMPLETED':
+        print(f"Task {task_id} has already been completed.")
+        return
+    
+    if task[2] == 'FAILED':
+        if task[3] < 3:
+            print(f"Task {task_id} failed, retrying... ({task[3] + 1} of 3)")
+            task = (task_id, 'PENDING', task[3] + 1, int(time.time()))
+            update_task(*task)
+            process_task(task_id)
+        else:
+            print(f"Task {task_id} failed, max retries reached.")
+            update_task(task_id, 'FAILED', 3, int(time.time()))
+            return
+    
+    print(f"Processing task {task_id}...")
+    # 模拟任务处理
+    time.sleep(2)
+    update_task(task_id, 'COMPLETED', 0, int(time.time()))
+    print(f"Task {task_id} completed.")
+
+# 示例任务处理
+process_task('task123')
+```
+
+### 说明
+1. **数据库连接**：使用 SQLite 数据库来存储任务状态。
+2. **任务表**：包含任务 ID、状态、重试次数和最后执行时间。
+3. **添加任务**：将新任务添加到数据库中。
+4. **更新任务**：更新任务的状态和重试次数。
+5. **获取任务**：从数据库中获取任务信息。
+6. **处理任务**：根据任务状态来决定是否重新执行任务。
+
+### 建议
+1. **使用事务**：在更新任务状态时使用事务，以确保数据的一致性。
+2. **日志记录**：增加日志记录功能，以便于调试和监控。
+3. **错误处理**：增加错误处理机制，以应对数据库连接失败等情况。

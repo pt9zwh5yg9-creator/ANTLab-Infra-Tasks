@@ -1,0 +1,97 @@
+{
+  "total": 10,
+  "success": 10,
+  "failed": 0,
+  "timeout": 0,
+  "ttft_median_s": 0.07885658099985449,
+  "ttft_p95_s": 0.9597039989998848,
+  "latency_median_s": 13.861164429999917,
+  "latency_p95_s": 38.484404583000014,
+  "tpot_median_s": 0.01815697510008346,
+  "output_tokens": 8773,
+  "window_s": 154.8836784362793,
+  "throughput_tokens_per_s": 56.642508032951326,
+  "by_prompt": {
+    "P01": {
+      "total": 1,
+      "success": 1,
+      "failed": 0,
+      "timeout": 0,
+      "ttft_median_s": 0.17607284199993956,
+      "ttft_p95_s": 0.17607284199993956
+    },
+    "P02": {
+      "total": 1,
+      "success": 1,
+      "failed": 0,
+      "timeout": 0,
+      "ttft_median_s": 0.07885658099985449,
+      "ttft_p95_s": 0.07885658099985449
+    },
+    "P03": {
+      "total": 1,
+      "success": 1,
+      "failed": 0,
+      "timeout": 0,
+      "ttft_median_s": 0.08758514500004821,
+      "ttft_p95_s": 0.08758514500004821
+    },
+    "P04": {
+      "total": 1,
+      "success": 1,
+      "failed": 0,
+      "timeout": 0,
+      "ttft_median_s": 0.07021784200014736,
+      "ttft_p95_s": 0.07021784200014736
+    },
+    "D01": {
+      "total": 1,
+      "success": 1,
+      "failed": 0,
+      "timeout": 0,
+      "ttft_median_s": 0.9597039989998848,
+      "ttft_p95_s": 0.9597039989998848
+    },
+    "D02": {
+      "total": 1,
+      "success": 1,
+      "failed": 0,
+      "timeout": 0,
+      "ttft_median_s": 0.06728878700005225,
+      "ttft_p95_s": 0.06728878700005225
+    },
+    "D03": {
+      "total": 1,
+      "success": 1,
+      "failed": 0,
+      "timeout": 0,
+      "ttft_median_s": 0.8337144279998938,
+      "ttft_p95_s": 0.8337144279998938
+    },
+    "D04": {
+      "total": 1,
+      "success": 1,
+      "failed": 0,
+      "timeout": 0,
+      "ttft_median_s": 0.06378924800037566,
+      "ttft_p95_s": 0.06378924800037566
+    },
+    "C01": {
+      "total": 1,
+      "success": 1,
+      "failed": 0,
+      "timeout": 0,
+      "ttft_median_s": 0.7184274159999404,
+      "ttft_p95_s": 0.7184274159999404
+    },
+    "C02": {
+      "total": 1,
+      "success": 1,
+      "failed": 0,
+      "timeout": 0,
+      "ttft_median_s": 0.07200934499996947,
+      "ttft_p95_s": 0.07200934499996947
+    }
+  },
+  "completed_at": "2026-10-18T22:20:52.191+08:00"
+}

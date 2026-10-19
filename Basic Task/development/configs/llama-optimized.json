@@ -1,0 +1,15 @@
+{
+  "name": "optimized",
+  "model": "~/models/Qwen2.5-7B-Instruct-GGUF/qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf",
+  "n_gpu_layers": 99,
+  "ctx_size": 32768,
+  "parallel": 4,
+  "cont_batching": true,
+  "flash_attn": "on",
+  "cache_type_k": "q8_0",
+  "cache_type_v": "q8_0",
+  "cache_ram": 0,
+  "host": "0.0.0.0",
+  "port": 8080,
+  "verbosity": 4
+}

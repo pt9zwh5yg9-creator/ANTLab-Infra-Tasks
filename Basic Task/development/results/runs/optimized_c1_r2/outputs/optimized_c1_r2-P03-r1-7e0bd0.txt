@@ -1,0 +1,62 @@
+```python
+def aggregate_by_owner(records):
+    """
+    统计记录按处理人分类的总数，以及 open、processing、closed 三种状态的数量。
+    :param records: 字典列表，每条记录包含 'owner' 和 'status'
+    :return: 字典，包含 'total'、'open'、'processing'、'closed'、'other' 和 'unassigned' 的统计结果
+    """
+    if not records:
+        return {}
+    
+    result = {
+        'total': 0,
+        'open': 0,
+        'processing': 0,
+        'closed': 0,
+        'other': 0,
+        'unassigned': 0
+    }
+    
+    for record in records:
+        owner = record.get('owner', 'unassigned')
+        status = record.get('status', '').lower()
+        
+        if owner == 'unassigned':
+            result['unassigned'] += 1
+        else:
+            result['total'] += 1
+        
+        if status == 'open':
+            result['open'] += 1
+        elif status == 'processing':
+            result['processing'] += 1
+        elif status == 'closed':
+            result['closed'] += 1
+        else:
+            result['other'] += 1
+    
+    return result
+
+# 测试示例
+test_records = [
+    {'owner': 'Alice', 'status': 'Open'},
+    {'owner': 'Bob', 'status': 'Processing'},
+    {'owner': 'Alice', 'status': 'Closed'},
+    {'owner': 'Charlie', 'status': 'closed'},
+    {'owner': '', 'status': 'Open'},
+    {'owner': 'Alice', 'status': 'Unknown'},
+    {'owner': 'Bob', 'status': 'processing'},
+    {'owner': 'Charlie', 'status': 'Other'},
+    {'owner': 'Alice', 'status': 'Open'},
+    {'owner': 'Bob', 'status': 'Processing'}
+]
+
+print(aggregate_by_owner(test_records))
+```
+
+### 测试示例
+1. `[]` -> `{ 'total': 0, 'open': 0, 'processing': 0, 'closed': 0, 'other': 0, 'unassigned': 0 }`
+2. `[{'owner': 'Alice', 'status': 'Open'}]` -> `{ 'total': 1, 'open': 1, 'processing': 0, 'closed': 0, 'other': 0, 'unassigned': 0 }`
+3. `[{'owner': 'Alice', 'status': 'Open'}, {'owner': 'Bob', 'status': 'Processing'}]` -> `{ 'total': 2, 'open': 1, 'processing': 1, 'closed': 0, 'other': 0, 'unassigned': 0 }`
+4. `[{'owner': 'Alice', 'status': 'Open'}, {'owner': 'Bob', 'status': 'Processing'}, {'owner': 'Charlie', 'status': 'closed'}]` -> `{ 'total': 3, 'open': 1, 'processing': 1, 'closed': 1, 'other': 0, 'unassigned': 0 }`
+5. `[{'owner': 'Alice', 'status': 'Open'}, {'owner': 'Bob', 'status': 'Processing'}, {'owner': 'Charlie', 'status': 'closed'}, {'owner': '', 'status': 'Open'}, {'owner': 'Alice', 'status': 'Unknown'}, {'owner': 'Bob', 'status': 'processing'}, {'owner': 'Charlie', 'status': 'Other'}]` -> `{ 'total': 7, 'open': 2, 'processing': 3, 'closed': 1, 'other': 1, 'unassigned': 1 }`

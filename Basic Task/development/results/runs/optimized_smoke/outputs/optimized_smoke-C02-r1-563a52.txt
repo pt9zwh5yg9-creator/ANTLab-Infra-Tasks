@@ -1,0 +1,154 @@
+### 修改后的程序
+
+```python
+from datetime import datetime
+import json
+
+
+STATUSES = ("open", "processing", "closed", "other")
+
+
+def parse_time(value):
+    """将时间字符串转换为 datetime。"""
+    return datetime.fromisoformat(value)
+
+
+def ticket_hours(record):
+    """读取一条工单的处理耗时，单位为小时。"""
+    start = parse_time(record["created_at"])
+    end = parse_time(record["closed_at"]) if record.get("closed_at") else None
+    if end and end < start:
+        return 0
+    return (end - start).total_seconds() / 3600 if end else 0
+
+
+def summarize_tickets(records):
+    """按状态、处理人汇总，并计算平均处理耗时。"""
+    by_status = {name: 0 for name in STATUSES}
+    by_owner = {}
+    hours = []
+
+    for record in records:
+        owner = record.get("owner", "unassigned").strip()
+        status = record.get("status", "").strip().lower()
+
+        if not owner or owner.isspace():
+            owner = "unassigned"
+
+        if status not in STATUSES:
+            status = "other"
+
+        if status in ("open", "processing", "closed"):
+            by_status[status] += 1
+
+        if owner not in by_owner:
+            by_owner[owner] = {
+                "total": 0,
+                "open": 0,
+                "processing": 0,
+                "closed": 0,
+                "other": 0,
+            }
+
+        by_owner[owner]["total"] += 1
+        by_owner[owner][status] += 1
+
+        if record.get("closed_at"):
+            hours.append(ticket_hours(record))
+        else:
+            hours.append(0)
+
+    average = sum(hours) / len(hours) if hours else None
+
+    return {
+        "total": len(records),
+        "by_status": by_status,
+        "by_owner": by_owner,
+        "average_closed_hours": average,
+    }
+
+
+def render_summary(summary):
+    """将统计结果转换为可打印的文本。"""
+    lines = ["工单统计", f"有效工单总数：{summary['total']}"]
+    lines.append("状态分布：")
+    for status in STATUSES:
+        lines.append(f"  {status}: {summary['by_status'][status]}")
+    lines.append("处理人分布：")
+    for owner, counts in sorted(summary["by_owner"].items()):
+        lines.append(f"  {owner}: {counts['total']}")
+    average = summary["average_closed_hours"]
+    lines.append(f"平均已关闭工单耗时：{average} 小时")
+    return "\n".join(lines)
+
+
+def test_summarize_tickets():
+    # 空输入
+    assert summarize_tickets([]) == {
+        "total": 0,
+        "by_status": {"open": 0, "processing": 0, "closed": 0, "other": 0},
+        "by_owner": {},
+        "average_closed_hours": None,
+    }
+
+    # 有效工单缺少 owner、status 或 closed_at
+    assert summarize_tickets([
+        {"id": "T001", "owner": "Chen", "status": "closed", "created_at": "2026-10-12T09:00:00+08:00"},
+        {"id": "T002", "owner": "Song", "status": "processing", "created_at": "2026-10-12T10:00:00+08:00"},
+        {"id": "T003", "owner": "Chen", "status": "open", "created_at": "2026-10-12T13:00:00+08:00"},
+        {"id": "T004", "owner": "Zhou", "status": "closed", "created_at": "2026-10-12T14:00:00+08:00"},
+        {"id": "T005", "owner": "Chen", "status": "closed", "created_at": "2026-10-12T09:00:00+08:00"},
+    ]) == {
+        "total": 5,
+        "by_status": {"open": 1, "processing": 1, "closed": 2, "other": 1},
+        "by_owner": {
+            "Chen": {"total": 3, "open": 1, "processing": 0, "closed": 2, "other": 0},
+            "Song": {"total": 1, "open": 0, "processing": 1, "closed": 0, "other": 0},
+            "Zhou": {"total": 1, "open": 0, "processing": 0, "closed": 1, "other": 0},
+        },
+        "average_closed_hours": 4.25
+    }
+
+    # 处理人为空字符串、None 或只含空格
+    assert summarize_tickets([
+        {"id": "T001", "owner": "", "status": "closed", "created_at": "2026-10-12T09:00:00+08:00"},
+        {"id": "T002", "owner": "None", "status": "processing", "created_at": "2026-10-12T10:00:00+08:00"},
+        {"id": "T003", "owner": " ", "status": "open", "created_at": "2026-10-12T13:00:00+08:00"},
+    ]) == {
+        "total": 3,
+        "by_status": {"open": 1, "processing": 1, "closed": 1, "other": 0},
+        "by_owner": {
+            "unassigned": {"total": 3, "open": 1, "processing": 1, "closed": 1, "other": 0}
+        },
+        "average_closed_hours": 2.0
+    }
+
+    # 状态含首尾空格、大小写变化或未知值
+    assert summarize_tickets([
+        {"id": "T001", "owner": "Chen", "status": "  closed  ", "created_at": "2026-10-12T09:00:00+08:00"},
+        {"id": "T002", "owner": "Song", "status": "processing", "created_at": "2026-10-12T10:00:00+08:00"},
+        {"id": "T003", "owner": "Chen", "status": " open ", "created_at": "2026-10-12T13:00:00+08:00"},
+    ]) == {
+        "total": 3,
+        "by_status": {"open": 2, "processing": 1, "closed": 0, "other": 0},
+        "by_owner": {
+            "Chen": {"total": 2, "open": 2, "processing": 0, "closed": 0, "other": 0},
+            "Song": {"total": 1, "open": 0, "processing": 1, "closed": 0, "other": 0},
+        },
+        "average_closed_hours": None
+    }
+
+    # 相同 id 重复出现，以及 id 缺失或只含空格
+    assert summarize_tickets([
+        {"id": "T001", "owner": "Chen", "status": "closed", "created_at": "2026-10-12T09:00:00+08:00"},
+        {"id": "T001", "owner": "Chen", "status": "closed", "created_at": "2026-10-12T09:00:00+08:00"},
+        {"id": "T002", "owner": "Song", "status": "processing", "created_at": "2026-10-12T10:00:00+08:00"},
+        {"id": "T003", "owner": "Chen", "status": "open", "created_at": "2026-10-12T13:00:00+08:00"},
+    ]) == {
+        "total": 3,
+        "by_status": {"open": 1, "processing": 1, "closed": 1, "other": 0},
+        "by_owner": {
+            "Chen": {"total": 2, "open": 1, "processing": 0, "closed": 1, "other": 0},
+            "Song": {"total": 1, "open": 0, "processing": 1, "closed": 0, "other": 0},
+        },
+        "average_closed_hours":

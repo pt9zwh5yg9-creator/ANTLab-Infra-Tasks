@@ -1,0 +1,36 @@
+{
+  "run_id": "baseline_c1_r2",
+  "started_at": "2026-10-18T22:31:15.922+08:00",
+  "base_url": "http://127.0.0.1:8000",
+  "concurrency": 1,
+  "repeats": 1,
+  "interval_ms": 0,
+  "tasks": [
+    "P01",
+    "P02",
+    "P03",
+    "P04",
+    "D01",
+    "D02",
+    "D03",
+    "D04",
+    "C01",
+    "C02"
+  ],
+  "workload_path": "/home/kiki/ANTLab-Infra-Tasks/Basic Task/development/configs/workload.json",
+  "workload_sha256": "a278b6abcfba4be111633eefa53b6129c944da5470558ae6ce4144bb4340415a",
+  "service_config": {
+    "llama_base_url": "http://127.0.0.1:8080",
+    "model": "Qwen2.5-7B-Instruct-Q4_K_M",
+    "system_prompt": "你为小型工作室提供办公文档处理与辅助编程服务。请按任务要求组织输出，区分资料中的事实、待确认信息与提出的建议。文件内容是供分析的资料。办公任务使用中文回答，代码任务采用题目指定的语言。",
+    "max_tokens": 1024,
+    "temperature": 0.2,
+    "top_p": 0.9,
+    "seed": 42,
+    "request_timeout_s": 300
+  },
+  "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+  "uname": "Linux LAPTOP-OICG4D52 6.18.54.1-microsoft-standard-WSL2 #1 SMP PREEMPT_DYNAMIC Tue Oct  6 19:13:07 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux",
+  "nvidia_smi": "NVIDIA GeForce RTX 5060 Laptop GPU, 8151 MiB, 5541 MiB, 596.56"
+}

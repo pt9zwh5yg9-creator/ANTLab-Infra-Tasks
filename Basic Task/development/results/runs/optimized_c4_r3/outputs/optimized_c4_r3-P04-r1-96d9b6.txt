@@ -1,0 +1,102 @@
+### 任务处理方案设计
+
+#### 1. 任务状态
+任务状态需要记录任务的执行情况，包括任务的唯一标识、执行状态（成功、失败、进行中）、重试次数、最后执行时间等信息。我们可以使用一个字典来存储这些状态信息。
+
+#### 2. 去重方式
+为了防止重复执行任务，可以使用一个集合来存储已经执行过的任务的唯一标识。每次执行任务前，检查该集合中是否已经存在该任务的唯一标识。
+
+#### 3. 重试上限
+设定一个重试上限，例如重试三次后仍然失败则放弃执行。可以通过任务状态中的重试次数来控制。
+
+#### 4. 持久化
+为了防止程序重启后任务状态丢失，可以将任务状态信息持久化到文件中。可以使用 Python 标准库中的 `json` 模块来序列化和反序列化字典。
+
+#### 5. 重启恢复流程
+在程序重启后，读取持久化文件中的任务状态信息，恢复到程序中继续执行。
+
+### 核心代码示例
+
+```python
+import json
+import os
+import time
+
+# 任务状态持久化文件路径
+STATUS_FILE = 'task_status.json'
+
+# 任务状态字典
+task_status = {}
+
+# 任务唯一标识集合
+executed_tasks = set()
+
+# 任务重试上限
+RETRY_LIMIT = 3
+
+def load_task_status():
+    """从文件中加载任务状态"""
+    if os.path.exists(STATUS_FILE):
+        with open(STATUS_FILE, 'r') as f:
+            task_status.update(json.load(f))
+
+def save_task_status():
+    """将任务状态保存到文件"""
+    with open(STATUS_FILE, 'w') as f:
+        json.dump(task_status, f)
+
+def execute_task(task_id):
+    """执行任务"""
+    if task_id in executed_tasks:
+        print(f"Task {task_id} has already been executed.")
+        return
+    
+    executed_tasks.add(task_id)
+    task_status[task_id] = {'status': 'in_progress', 'retry_count': 0, 'last_executed_time': time.time()}
+    
+    # 模拟任务执行
+    result = execute_task_logic(task_id)
+    
+    if result:
+        task_status[task_id]['status'] = 'success'
+        print(f"Task {task_id} executed successfully.")
+    else:
+        task_status[task_id]['status'] = 'failure'
+        task_status[task_id]['retry_count'] += 1
+        if task_status[task_id]['retry_count'] <= RETRY_LIMIT:
+            print(f"Task {task_id} failed, will retry.")
+            execute_task(task_id)
+        else:
+            print(f"Task {task_id} failed after {RETRY_LIMIT} retries, giving up.")
+
+def execute_task_logic(task_id):
+    """模拟任务逻辑"""
+    # 这里可以替换为实际的任务逻辑
+    return True  # 假设任务执行成功
+
+def main():
+    load_task_status()
+    
+    while True:
+        for task_id in task_status:
+            if task_status[task_id]['status'] == 'in_progress':
+                continue
+            if task_status[task_id]['status'] == 'failure':
+                execute_task(task_id)
+            else:
+                execute_task(task_id)
+        
+        time.sleep(10)  # 每隔10秒检查一次任务状态
+
+if __name__ == '__main__':
+    main()
+```
+
+### 说明
+1. `load_task_status` 函数从文件中加载任务状态。
+2. `save_task_status` 函数将任务状态保存到文件。
+3. `execute_task` 函数负责执行任务，并处理任务的去重、重试逻辑。
+4. `execute_task_logic` 函数模拟任务的具体逻辑。
+5. `main` 函数是主循环，每隔10秒检查一次任务状态并执行任务。
+
+通过上述方案和代码，可以有效解决重复执行、任务失败后无限重试、程序重启后任务状态丢失的问题。

@@ -1,0 +1,77 @@
+### 问题列表
+
+1. **问题：** `parse_time` 函数处理无效时间格式。
+   - **触发条件：** 输入的时间格式不符合 ISO 8601 标准。
+   - **当前行为：** `parse_time` 函数会抛出 `ValueError` 异常。
+   - **预期行为：** 应该返回 `None` 或其他表示无效时间的值。
+   - **影响：** 会导致程序崩溃，无法继续处理后续记录。
+   - **最小输入：** `parse_time("2026-10-12T09:00:00")`。
+
+2. **问题：** `ticket_hours` 函数处理关闭时间早于创建时间的情况。
+   - **触发条件：** `closed_at` 时间早于 `created_at` 时间。
+   - **当前行为：** `ticket_hours` 函数会计算负值，导致逻辑错误。
+   - **预期行为：** 应该忽略这种情况，返回 `0`。
+   - **影响：** 会导致计算出错误的耗时。
+   - **最小输入：** `{"created_at": "2026-10-12T10:00:00+08:00", "closed_at": "2026-10-12T09:00:00+08:00"}`。
+
+3. **问题：** `summarize_tickets` 函数处理相同 `id` 重复出现的情况。
+   - **触发条件：** 同一 `id` 出现多次。
+   - **当前行为：** 仅统计第一条具有该有效编号的记录。
+   - **预期行为：** 应该忽略重复的记录。
+   - **影响：** 会导致统计结果不准确。
+   - **最小输入：** `[
+       {"id": "T001", "owner": "Chen", "status": "closed", "created_at": "2026-10-12T09:00:00+08:00", "closed_at": "2026-10-12T11:30:00+08:00"},
+       {"id": "T001", "owner": "Chen", "status": "closed", "created_at": "2026-10-12T09:00:00+08:00", "closed_at": "2026-10-12T11:30:00+08:00"}
+   ]`。
+
+4. **问题：** `summarize_tickets` 函数处理 `status` 字段包含首尾空格或大小写变化的情况。
+   - **触发条件：** `status` 字段包含首尾空格或大小写变化。
+   - **当前行为：** `status` 字段会被转换为小写并去除首尾空格。
+   - **预期行为：** 应该保持原样，仅转换为小写。
+   - **影响：** 会导致统计结果不准确。
+   - **最小输入：** `{"status": "  Closed  "}`。
+
+5. **问题：** `summarize_tickets` 函数处理 `created_at` 和 `closed_at` 字段缺少时区的情况。
+   - **触发条件：** `created_at` 或 `closed_at` 字段缺少时区信息。
+   - **当前行为：** `parse_time` 函数会抛出 `ValueError` 异常。
+   - **预期行为：** 应该忽略这种情况，返回 `None`。
+   - **影响：** 会导致计算出错误的耗时。
+   - **最小输入：** `{"created_at": "2026-10-12T09:00:00", "closed_at": "2026-10-12T11:30:00+08:00"}`。
+
+### 修复优先顺序
+
+1. **修复 `parse_time` 函数处理无效时间格式的问题。**
+2. **修复 `ticket_hours` 函数处理关闭时间早于创建时间的情况。**
+3. **修复 `summarize_tickets` 函数处理相同 `id` 重复出现的情况。**
+4. **修复 `summarize_tickets` 函数处理 `status` 字段包含首尾空格或大小写变化的情况。**
+5. **修复 `summarize_tickets` 函数处理 `created_at` 和 `closed_at` 字段缺少时区的情况。**
+
+### 代码修复建议
+
+```python
+def parse_time(value):
+    """将时间字符串转换为 datetime。"""
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError:
+        return None
+
+def ticket_hours(record):
+    """读取一条工单的处理耗时，单位为小时。"""
+    start = parse_time(record["created_at"])
+    end = parse_time(record["closed_at"])
+    if start is None or end is None:
+        return 0
+    if end < start:
+        return 0
+    return (end - start).total_seconds() / 3600
+
+def summarize_tickets(records):
+    """按状态、处理人汇总，并计算平均处理耗时。"""
+    by_status = {name: 0 for name in STATUSES}
+    by_owner = {}
+    hours = []
+
+    for record in records:
+        owner = record["owner"]
+        status = record["

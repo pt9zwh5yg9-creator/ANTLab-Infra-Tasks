@@ -1,0 +1,87 @@
+```python
+def aggregate_by_owner(records):
+    """
+    统计记录按处理人分类的总数，以及 open、processing、closed 三种状态的数量。
+    :param records: 字典列表，每条记录包含 'owner' 和 'status'
+    :return: 字典，包含统计结果
+    """
+    if not records:
+        return {}
+    
+    result = {
+        'unassigned': {'total': 0, 'open': 0, 'processing': 0, 'closed': 0, 'other': 0},
+        'assigned': {'total': 0, 'open': 0, 'processing': 0, 'closed': 0, 'other': 0}
+    }
+    
+    for record in records:
+        owner = record.get('owner', 'unassigned').lower()
+        status = record.get('status', '').lower()
+        
+        if owner == 'unassigned':
+            result['unassigned']['total'] += 1
+            if status == 'open':
+                result['unassigned']['open'] += 1
+            elif status == 'processing':
+                result['unassigned']['processing'] += 1
+            elif status == 'closed':
+                result['unassigned']['closed'] += 1
+            else:
+                result['unassigned']['other'] += 1
+        else:
+            result['assigned']['total'] += 1
+            if status == 'open':
+                result['assigned']['open'] += 1
+            elif status == 'processing':
+                result['assigned']['processing'] += 1
+            elif status == 'closed':
+                result['assigned']['closed'] += 1
+            else:
+                result['assigned']['other'] += 1
+    
+    return result
+
+# 测试示例
+test_records = [
+    {'owner': 'Alice', 'status': 'Open'},
+    {'owner': 'Bob', 'status': 'Processing'},
+    {'owner': 'Charlie', 'status': 'Closed'},
+    {'owner': '', 'status': 'Open'},
+    {'owner': 'David', 'status': 'Unknown'},
+    {'owner': 'Eve', 'status': 'Processing'},
+    {'owner': 'Fiona', 'status': 'Closed'},
+    {'owner': 'Gina', 'status': 'Open'},
+    {'owner': 'Hank', 'status': 'Unknown'},
+    {'owner': 'Ivy', 'status': 'Processing'}
+]
+
+print(aggregate_by_owner(test_records))
+```
+
+### 事实
+- 函数 `aggregate_by_owner` 使用 Python 标准库实现。
+- 输入是字典列表，每条记录包含 `owner` 和 `status`。
+- 函数按处理人统计总数，以及 open、processing、closed 三种状态的数量。
+- 状态匹配忽略大小写。
+- 缺失或为空的 `owner` 归为 `unassigned`。
+- 未知状态计入 `other`。
+- 输入为空时返回空字典。
+
+### 测试示例
+1. `{'owner': 'Alice', 'status': 'Open'}` -> `unassigned` 的 open 数量加 1
+2. `{'owner': 'Bob', 'status': 'Processing'}` -> `unassigned` 的 processing 数量加 1
+3. `{'owner': 'Charlie', 'status': 'Closed'}` -> `unassigned` 的 closed 数量加 1
+4. `{'owner': '', 'status': 'Open'}` -> `unassigned` 的 open 数量加 1
+5. `{'owner': 'David', 'status': 'Unknown'}` -> `unassigned` 的 other 数量加 1
+6. `{'owner': 'Eve', 'status': 'Processing'}` -> `assigned` 的 processing 数量加 1
+7. `{'owner': 'Fiona', 'status': 'Closed'}` -> `assigned` 的 closed 数量加 1
+8. `{'owner': 'Gina', 'status': 'Open'}` -> `assigned` 的 open 数量加 1
+9. `{'owner': 'Hank', 'status': 'Unknown'}` -> `assigned` 的 other 数量加 1
+10. `{'owner': 'Ivy', 'status': 'Processing'}` -> `assigned` 的 processing 数量加 1
+
+### 待确认信息
+- 确认函数的逻辑是否正确。
+- 确认测试示例是否覆盖所有情况。
+
+### 建议
+- 可以增加更多的测试用例，确保函数的健壮性。
+- 可以考虑使用更简洁的代码结构，提高可读性。

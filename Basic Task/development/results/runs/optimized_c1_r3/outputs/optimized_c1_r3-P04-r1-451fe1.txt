@@ -1,0 +1,105 @@
+### 任务处理方案设计
+
+#### 1. 任务状态
+任务状态需要记录任务的执行情况，包括任务的唯一标识、执行状态（成功、失败、进行中）、重试次数、最后执行时间等信息。使用字典存储任务状态，键为任务ID，值为任务状态信息。
+
+#### 2. 去重方式
+使用一个集合来存储已经执行过的任务ID，确保任务不重复执行。每次处理任务前，检查任务ID是否在集合中，如果在，则跳过该任务。
+
+#### 3. 重试上限
+设置一个重试上限，例如3次。如果任务失败超过3次，则不再重试，记录失败原因并停止处理该任务。
+
+#### 4. 持久化
+使用文件来持久化任务状态信息。可以使用JSON格式存储任务状态信息，确保数据的可读性和易维护性。
+
+#### 5. 重启恢复流程
+在程序重启后，重新读取任务状态信息，恢复任务处理状态。如果任务失败，则根据重试上限决定是否继续重试。
+
+### 核心代码示例
+
+```python
+import json
+import os
+import time
+
+# 任务状态存储文件路径
+STATUS_FILE = 'task_status.json'
+
+# 任务状态字典
+task_status = {}
+
+# 任务去重集合
+processed_tasks = set()
+
+# 任务重试上限
+RETRY_LIMIT = 3
+
+# 读取任务状态信息
+def load_task_status():
+    if os.path.exists(STATUS_FILE):
+        with open(STATUS_FILE, 'r') as f:
+            task_status.update(json.load(f))
+
+# 保存任务状态信息
+def save_task_status():
+    with open(STATUS_FILE, 'w') as f:
+        json.dump(task_status, f)
+
+# 处理任务
+def process_task(task_id):
+    if task_id in processed_tasks:
+        print(f"Task {task_id} has been processed, skipping.")
+        return
+
+    # 模拟任务执行
+    success = execute_task(task_id)
+    if success:
+        task_status[task_id] = {'status': 'success', 'last_executed': time.time()}
+        processed_tasks.add(task_id)
+        print(f"Task {task_id} executed successfully.")
+    else:
+        task_status[task_id] = {'status': 'failed', 'last_executed': time.time(), 'retry_count': 0}
+        print(f"Task {task_id} failed.")
+
+# 执行任务
+def execute_task(task_id):
+    # 模拟任务执行逻辑
+    # 这里可以替换为实际的任务执行代码
+    time.sleep(1)  # 模拟任务执行时间
+    return True  # 模拟任务成功执行
+
+# 任务重试逻辑
+def retry_task(task_id):
+    if task_status[task_id]['status'] == 'failed':
+        task_status[task_id]['retry_count'] += 1
+        if task_status[task_id]['retry_count'] <= RETRY_LIMIT:
+            process_task(task_id)
+        else:
+            task_status[task_id]['status'] = 'failed_max_retries'
+            print(f"Task {task_id} failed after {RETRY_LIMIT} retries.")
+
+# 主循环
+def main():
+    load_task_status()
+    while True:
+        for task_id in task_status:
+            if task_status[task_id]['status'] == 'failed':
+                retry_task(task_id)
+            elif task_status[task_id]['status'] == 'success':
+                continue
+            else:
+                process_task(task_id)
+        time.sleep(10)  # 模拟周期性任务处理
+
+if __name__ == '__main__':
+    main()
+```
+
+### 说明
+1. **任务状态**：使用`task_status`字典存储任务状态信息，`processed_tasks`集合存储已经处理过的任务ID。
+2. **去重**：在处理任务前检查任务ID是否在`processed_tasks`集合中。
+3. **重试**：设置重试上限，超过上限后记录失败原因并停止重试。
+4. **持久化**：使用JSON文件存储任务状态信息，确保数据的持久化。
+5. **重启恢复**：在程序重启后重新读取任务状态信息，恢复任务处理状态。
+
+以上代码示例展示了如何使用Python标准库实现任务处理方案。

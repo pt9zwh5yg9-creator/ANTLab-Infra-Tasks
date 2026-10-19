@@ -1,0 +1,15 @@
+{
+  "name": "baseline",
+  "model": "~/models/Qwen2.5-7B-Instruct-GGUF/qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf",
+  "n_gpu_layers": 99,
+  "ctx_size": 8192,
+  "parallel": 1,
+  "cont_batching": true,
+  "flash_attn": "off",
+  "cache_type_k": "f16",
+  "cache_type_v": "f16",
+  "cache_ram": 0,
+  "host": "0.0.0.0",
+  "port": 8080,
+  "verbosity": 4
+}

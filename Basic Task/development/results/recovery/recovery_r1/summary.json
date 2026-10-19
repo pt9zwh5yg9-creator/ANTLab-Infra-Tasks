@@ -1,0 +1,22 @@
+{
+  "run_id": "recovery_r1",
+  "started_at": "2026-10-19T16:53:47.913+08:00",
+  "completed_at": "2026-10-19T16:54:58.302+08:00",
+  "total": 4,
+  "success": 4,
+  "failed": 0,
+  "retries": 14,
+  "interrupted_attempts": 14,
+  "recovery_s": 12.755892753601074,
+  "verification_status": "success",
+  "verification_request_id": "recovery_r1-verify-04b80d",
+  "tasks": [
+    "P01",
+    "P02",
+    "D01",
+    "C02"
+  ],
+  "concurrency": 2,
+  "retries_limit": 8,
+  "workload_sha256": "a278b6abcfba4be111633eefa53b6129c944da5470558ae6ce4144bb4340415a"
+}
