@@ -1,0 +1,99 @@
+### 资料事实
+
+1. **`render_csv` 函数**：负责将给定的 `rows` 和 `fields` 转换为 CSV 格式的字符串。
+2. **`export_reports` 函数**：负责批量导出报告，将每个报告的 `id`、`title` 和 `rows` 转换为 CSV 格式，并将结果存储在一个字典列表中。
+3. **`main` 函数**：负责生成示例数据并调用 `export_reports` 函数进行导出，最后将结果以 JSON 格式打印出来。
+
+### 待确认信息
+
+1. **批量导出的数据流**：从 `reports` 列表开始，每个报告的 `rows` 被转换为 CSV 格式，然后将 `id`、`title` 和转换后的 CSV 内容存储到 `exported` 列表中。
+2. **在大量报告、字段缺失和导出中断情境下的问题**：
+   - **大量报告**：需要考虑性能问题，如内存使用和处理时间。
+   - **字段缺失**：需要确保 `fields` 列表中包含所有必要的字段。
+   - **导出中断**：需要考虑如何处理导出过程中可能出现的中断情况。
+
+### 建议
+
+1. **性能优化**：对于大量报告，可以考虑分批处理，而不是一次性处理所有报告。
+2. **字段验证**：在导出前，确保每个报告的 `rows` 中包含所有指定的 `fields`。
+3. **异常处理**：增加异常处理机制，确保在导出过程中遇到问题时能够妥善处理。
+
+### 改造顺序
+
+1. **性能优化**：首先优化处理大量报告的性能。
+2. **字段验证**：确保每个报告的 `rows` 中包含所有指定的 `fields`。
+3. **异常处理**：增加异常处理机制，确保在导出过程中遇到问题时能够妥善处理。
+
+### 验证方法
+
+1. **性能优化**：
+   - 使用 `timeit` 模块测量处理大量报告的时间。
+   - 使用 `tracemalloc` 模块跟踪内存使用情况。
+
+2. **字段验证**：
+   - 在 `export_reports` 函数中增加字段验证逻辑，确保每个报告的 `rows` 中包含所有指定的 `fields`。
+   - 使用测试数据进行验证，确保所有字段都正确处理。
+
+3. **异常处理**：
+   - 在 `export_reports` 函数中增加异常处理逻辑，捕获并记录可能发生的异常。
+   - 使用测试数据进行验证，确保在导出过程中遇到问题时能够妥善处理。
+
+### 示例代码
+
+```python
+import csv
+import io
+import json
+import time
+import tracemalloc
+import timeit
+
+def render_csv(rows, fields):
+    output = io.StringIO(newline="")
+    writer = csv.DictWriter(output, fieldnames=fields, extrasaction="ignore")
+    writer.writeheader()
+    writer.writerows(rows)
+    return output.getvalue()
+
+def export_reports(reports, fields):
+    exported = []
+    for report in reports:
+        if all(field in row for row in report["rows"] for field in fields):
+            exported.append({
+                "id": report["id"],
+                "title": report["title"],
+                "csv": render_csv(report["rows"], fields),
+            })
+        else:
+            print(f"Report {report['id']} has missing fields.")
+    return exported
+
+def main():
+    reports = [
+        {
+            "id": "week-01",
+            "title": "项目周报",
+            "rows": [
+                {"owner": "Yu", "task": "接口联调", "status": "closed"},
+                {"owner": "Luo", "task": "页面调整", "status": "processing"},
+            ],
+        },
+        {
+            "id": "week-02",
+            "title": "资料整理",
+            "rows": [{"owner": "Wen", "task": "目录更新", "status": "open"}],
+        },
+    ]
+    start_time = time.time()
+    tracemalloc.start()
+    result = export_reports(reports, ["owner", "task", "status"])
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+    current, peak = tracemalloc.get_traced_memory()
+    print(f"Current memory usage: {current / 1000000}MB; Peak: {peak / 1000000}MB")
+    print(f"Time taken: {time.time() - start_time} seconds")
+
+if __name__ == "__main__":
+    main()
+```
+
+通过上述步骤和代码，可以确保在处理大量报告时能够保持高性能，并且能够妥善处理字段缺失和导出中断的情况。

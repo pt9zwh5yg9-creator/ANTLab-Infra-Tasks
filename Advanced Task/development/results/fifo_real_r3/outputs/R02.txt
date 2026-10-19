@@ -1,0 +1,142 @@
+### 资料
+为了处理较多报告的分批导出，我们将增加单报告失败记录、进度记录和中断后继续执行功能。我们将使用 Python 标准库中的 `shutil` 和 `os` 来处理文件操作和去重。具体实现将包括以下步骤：
+
+1. **进度记录**：使用文件来记录当前处理到哪个报告。
+2. **失败记录**：记录每个报告的处理状态，包括成功和失败。
+3. **中断后继续执行**：从上次中断的位置继续处理。
+
+### 待确认信息
+1. **文件存储位置**：需要确认报告文件的存储位置。
+2. **失败处理策略**：需要确认失败报告的处理策略，例如是否需要重新处理失败的报告。
+
+### 实现
+
+```python
+import csv
+import io
+import json
+import os
+import shutil
+import tempfile
+from typing import List, Dict
+
+def render_csv(rows, fields):
+    output = io.StringIO(newline="")
+    writer = csv.DictWriter(output, fieldnames=fields, extrasaction="ignore")
+    writer.writeheader()
+    writer.writerows(rows)
+    return output.getvalue()
+
+def export_report(report, fields, output_dir):
+    try:
+        csv_content = render_csv(report["rows"], fields)
+        with open(os.path.join(output_dir, f"{report['id']}.csv"), 'w', newline='') as csvfile:
+            csvfile.write(csv_content)
+        return True, None
+    except Exception as e:
+        return False, str(e)
+
+def export_reports(reports, fields, output_dir):
+    progress_file = os.path.join(output_dir, "progress.txt")
+    failed_file = os.path.join(output_dir, "failed.txt")
+    
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    
+    if os.path.exists(progress_file):
+        with open(progress_file, 'r') as f:
+            last_id = f.read().strip()
+    else:
+        last_id = None
+    
+    for report in reports:
+        if report['id'] == last_id:
+            break
+    
+        success, error = export_report(report, fields, output_dir)
+        if success:
+            with open(progress_file, 'w') as f:
+                f.write(report['id'])
+        else:
+            with open(failed_file, 'a') as f:
+                f.write(f"{report['id']} - {error}\n")
+
+def main():
+    reports = [
+        {
+            "id": "week-01",
+            "title": "项目周报",
+            "rows": [
+                {"owner": "Yu", "task": "接口联调", "status": "closed"},
+                {"owner": "Luo", "task": "页面调整", "status": "processing"},
+            ],
+        },
+        {
+            "id": "week-02",
+            "title": "资料整理",
+            "rows": [{"owner": "Wen", "task": "目录更新", "status": "open"}],
+        },
+    ]
+    fields = ["owner", "task", "status"]
+    output_dir = tempfile.mkdtemp()
+    
+    export_reports(reports, fields, output_dir)
+    
+    print("Export completed. Reports saved in:", output_dir)
+    
+    # Cleanup
+    shutil.rmtree(output_dir)
+
+if __name__ == "__main__":
+    main()
+```
+
+### 测试样例
+
+```python
+def test_export_reports():
+    reports = [
+        {
+            "id": "week-01",
+            "title": "项目周报",
+            "rows": [
+                {"owner": "Yu", "task": "接口联调", "status": "closed"},
+                {"owner": "Luo", "task": "页面调整", "status": "processing"},
+            ],
+        },
+        {
+            "id": "week-02",
+            "title": "资料整理",
+            "rows": [{"owner": "Wen", "task": "目录更新", "status": "open"}],
+        },
+    ]
+    fields = ["owner", "task", "status"]
+    output_dir = tempfile.mkdtemp()
+    
+    # Simulate failure in the second report
+    def mock_export_report(report, fields, output_dir):
+        if report['id'] == "week-02":
+            raise Exception("Failed to export report")
+        return True, None
+    
+    with unittest.mock.patch('export_reports.export_report', side_effect=mock_export_report):
+        export_reports(reports, fields, output_dir)
+    
+    # Check if progress file is updated
+    with open(os.path.join(output_dir, "progress.txt"), 'r') as f:
+        assert f.read().strip() == "week-01"
+    
+    # Check if failed file is updated
+    with open(os.path.join(output_dir, "failed.txt"), 'r') as f:
+        assert "week-02 - Failed to export report" in f.read()
+    
+    shutil.rmtree(output_dir)
+
+if __name__ == "__main__":
+    unittest.main()
+```
+
+### 建议
+1. **文件存储位置**：建议使用临时目录来存储报告文件，以避免与现有文件冲突。
+2. **失败处理策略**：建议在失败后重新处理失败的报告，或者提供一个选项来跳过失败的报告。
+3. **日志记录**：建议增加日志记录功能，以便更好地跟踪处理过程中的问题。

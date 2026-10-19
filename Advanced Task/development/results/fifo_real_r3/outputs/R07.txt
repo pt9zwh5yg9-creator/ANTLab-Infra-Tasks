@@ -1,0 +1,102 @@
+### 资料事实
+
+1. **`render_csv` 函数**：负责将给定的 `rows` 和 `fields` 转换为 CSV 格式的字符串。
+2. **`export_reports` 函数**：负责批量导出报告，将每个报告的 `id`、`title` 和 `rows` 转换为 CSV 格式，并将结果存储在一个字典列表中。
+3. **`main` 函数**：负责生成示例报告数据，并调用 `export_reports` 函数进行导出，最后将结果以 JSON 格式打印出来。
+
+### 待确认信息
+
+1. **批量导出的数据流**：从 `reports` 列表开始，每个报告的 `rows` 被转换为 CSV 格式，然后将这些 CSV 数据与 `id` 和 `title` 结合，生成最终的导出结果。
+2. **在大量报告、字段缺失和导出中断情境下的问题**：
+   - **大量报告**：需要考虑内存使用情况和性能问题。
+   - **字段缺失**：需要处理字段缺失的情况，确保 `render_csv` 函数能够正确处理。
+   - **导出中断**：需要考虑导出过程中可能出现的中断情况，确保数据的一致性和完整性。
+
+### 建议
+
+1. **批量导出的数据流**：保持当前的设计，但需要优化内存使用和性能。
+2. **字段缺失**：在 `render_csv` 函数中增加对字段缺失的处理，确保即使某些字段缺失，也能正确生成 CSV 数据。
+3. **导出中断**：在 `export_reports` 函数中增加错误处理机制，确保在导出过程中出现中断时能够正确处理。
+
+### 改造顺序
+
+1. **处理字段缺失**：首先处理 `render_csv` 函数中的字段缺失问题。
+2. **优化内存使用和性能**：在处理完字段缺失问题后，优化 `export_reports` 函数的内存使用和性能。
+3. **增加错误处理机制**：最后，在 `export_reports` 函数中增加错误处理机制，确保在导出过程中出现中断时能够正确处理。
+
+### 验证方法
+
+1. **处理字段缺失**：
+   - 测试 `render_csv` 函数，确保在某些字段缺失时仍能正确生成 CSV 数据。
+   - 测试 `export_reports` 函数，确保在某些报告的 `rows` 中字段缺失时仍能正确导出。
+
+2. **优化内存使用和性能**：
+   - 使用 `time` 和 `memory_profiler` 工具，测试 `export_reports` 函数在大量报告情况下的性能和内存使用情况。
+   - 优化代码，减少不必要的内存使用和提高性能。
+
+3. **增加错误处理机制**：
+   - 测试 `export_reports` 函数，确保在导出过程中出现中断时能够正确处理。
+   - 添加日志记录，记录导出过程中的错误信息，便于调试和问题排查。
+
+### 代码实现
+
+```python
+import csv
+import io
+import json
+import time
+from memory_profiler import memory_usage
+
+
+def render_csv(rows, fields):
+    output = io.StringIO(newline="")
+    writer = csv.DictWriter(output, fieldnames=fields, extrasaction="ignore")
+    writer.writeheader()
+    writer.writerows(rows)
+    return output.getvalue()
+
+
+def export_reports(reports, fields):
+    exported = []
+    for report in reports:
+        try:
+            exported.append({
+                "id": report["id"],
+                "title": report["title"],
+                "csv": render_csv(report["rows"], fields),
+            })
+        except Exception as e:
+            print(f"Error processing report {report['id']}: {e}")
+    return exported
+
+
+def main():
+    reports = [
+        {
+            "id": "week-01",
+            "title": "项目周报",
+            "rows": [
+                {"owner": "Yu", "task": "接口联调", "status": "closed"},
+                {"owner": "Luo", "task": "页面调整", "status": "processing"},
+            ],
+        },
+        {
+            "id": "week-02",
+            "title": "资料整理",
+            "rows": [{"owner": "Wen", "task": "目录更新", "status": "open"}],
+        },
+    ]
+    start_time = time.time()
+    mem_usage = memory_usage((export_reports, (reports, ["owner", "task", "status"])))
+    end_time = time.time()
+    print(f"Time taken: {end_time - start_time} seconds")
+    print(f"Memory usage: {max(mem_usage)} MiB")
+    result = export_reports(reports, ["owner", "task", "status"])
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+
+
+if __name__ == "__main__":
+    main()
+```
+
+通过上述改造，可以确保在大量报告、字段缺失和导出中断情境下能够正确处理，并优化性能和内存使用。

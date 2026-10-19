@@ -1,0 +1,95 @@
+### 资料事实
+
+1. **`render_csv` 函数**：负责将给定的 `rows` 和 `fields` 转换为 CSV 格式的字符串。
+2. **`export_reports` 函数**：负责批量导出报告，将每个报告的 `id`、`title` 和 `rows` 转换为 CSV 格式，并将结果存储在一个字典列表中。
+3. **`main` 函数**：负责生成示例数据并调用 `export_reports` 函数进行导出，最后将结果以 JSON 格式打印出来。
+
+### 待确认信息
+
+1. **批量导出的数据流**：从 `reports` 列表开始，每个报告的 `rows` 被转换为 CSV 格式，然后将 `id`、`title` 和 CSV 内容添加到 `exported` 列表中。
+2. **在大量报告、字段缺失和导出中断情境下的问题**：
+   - **大量报告**：需要确保函数能够高效处理大量报告，不会导致内存溢出或性能问题。
+   - **字段缺失**：需要确保在 `fields` 列表中缺失字段时，`render_csv` 能够正确处理并忽略这些字段。
+   - **导出中断**：需要确保在导出过程中发生中断时，能够正确恢复并继续导出。
+
+### 建议
+
+1. **批量导出的数据流**：保持当前实现，但优化 `render_csv` 和 `export_reports` 函数，以提高处理大量报告的效率。
+2. **字段缺失**：在 `render_csv` 函数中添加错误处理，确保在 `fields` 列表中缺失字段时，能够正确忽略这些字段。
+3. **导出中断**：在 `export_reports` 函数中添加日志记录，以便在导出过程中发生中断时，能够记录中断点并恢复。
+
+### 改造顺序
+
+1. **优化 `render_csv` 函数**：确保在 `fields` 列表中缺失字段时，能够正确忽略这些字段。
+2. **优化 `export_reports` 函数**：确保在导出过程中发生中断时，能够记录中断点并恢复。
+3. **添加日志记录**：在 `export_reports` 函数中添加日志记录，以便在导出过程中发生中断时，能够记录中断点并恢复。
+
+### 验证方法
+
+1. **优化 `render_csv` 函数**：
+   - 测试 `fields` 列表中包含和缺失字段的情况。
+   - 检查输出的 CSV 格式是否正确。
+
+2. **优化 `export_reports` 函数**：
+   - 测试大量报告的情况，确保不会导致内存溢出或性能问题。
+   - 模拟导出中断情况，确保能够正确恢复并继续导出。
+
+3. **添加日志记录**：
+   - 模拟导出中断情况，检查日志记录是否正确记录中断点。
+   - 检查在导出过程中发生中断时，是否能够正确恢复并继续导出。
+
+以下是改造后的代码示例：
+
+```python
+import csv
+import io
+import json
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
+def render_csv(rows, fields):
+    output = io.StringIO(newline="")
+    writer = csv.DictWriter(output, fieldnames=fields, extrasaction="ignore")
+    writer.writeheader()
+    writer.writerows(rows)
+    return output.getvalue()
+
+def export_reports(reports, fields):
+    exported = []
+    for report in reports:
+        try:
+            csv_content = render_csv(report["rows"], fields)
+            exported.append({
+                "id": report["id"],
+                "title": report["title"],
+                "csv": csv_content,
+            })
+        except Exception as e:
+            logging.error(f"Error exporting report {report['id']}: {e}")
+    return exported
+
+def main():
+    reports = [
+        {
+            "id": "week-01",
+            "title": "项目周报",
+            "rows": [
+                {"owner": "Yu", "task": "接口联调", "status": "closed"},
+                {"owner": "Luo", "task": "页面调整", "status": "processing"},
+            ],
+        },
+        {
+            "id": "week-02",
+            "title": "资料整理",
+            "rows": [{"owner": "Wen", "task": "目录更新", "status": "open"}],
+        },
+    ]
+    result = export_reports(reports, ["owner", "task", "status"])
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+
+if __name__ == "__main__":
+    main()
+```
+
+通过以上改造，可以确保在大量报告、字段缺失和导出中断情境下能够正确处理并记录问题。

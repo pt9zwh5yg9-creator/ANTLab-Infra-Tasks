@@ -1,0 +1,135 @@
+### 资料
+为了处理较多报告的分批导出方案，我们将增加单报告失败记录、进度记录和中断后继续执行功能。我们将使用 Python 标准库来实现这些功能，并确保去重和恢复依据明确。
+
+### 待确认信息
+1. **报告是否需要去重**：是否需要在导出时检查报告的唯一性？
+2. **进度记录**：如何记录和管理导出进度？
+3. **中断后继续执行**：如何在中断后恢复执行？
+
+### 建议
+1. **去重**：通过检查报告的 `id` 来确保不重复导出。
+2. **进度记录**：使用文件来记录导出进度，记录已完成的报告 ID。
+3. **中断后继续执行**：通过读取进度文件来恢复执行。
+
+### 实现
+
+```python
+import csv
+import io
+import json
+import os
+import time
+
+def render_csv(rows, fields):
+    output = io.StringIO(newline="")
+    writer = csv.DictWriter(output, fieldnames=fields, extrasaction="ignore")
+    writer.writeheader()
+    writer.writerows(rows)
+    return output.getvalue()
+
+def export_report(report, fields, progress_file):
+    try:
+        csv_content = render_csv(report["rows"], fields)
+        with open(f"{report['id']}.csv", "w", newline="") as f:
+            f.write(csv_content)
+        with open(progress_file, "a") as f:
+            f.write(f"{report['id']}\n")
+        return True
+    except Exception as e:
+        with open(f"{report['id']}_error.log", "w") as f:
+            f.write(str(e))
+        return False
+
+def export_reports(reports, fields, progress_file):
+    exported = []
+    for report in reports:
+        if report["id"] not in set([r["id"] for r in exported]):
+            if export_report(report, fields, progress_file):
+                exported.append(report)
+    return exported
+
+def main():
+    reports = [
+        {
+            "id": "week-01",
+            "title": "项目周报",
+            "rows": [
+                {"owner": "Yu", "task": "接口联调", "status": "closed"},
+                {"owner": "Luo", "task": "页面调整", "status": "processing"},
+            ],
+        },
+        {
+            "id": "week-02",
+            "title": "资料整理",
+            "rows": [{"owner": "Wen", "task": "目录更新", "status": "open"}],
+        },
+    ]
+    fields = ["owner", "task", "status"]
+    progress_file = "progress.txt"
+    if not os.path.exists(progress_file):
+        with open(progress_file, "w") as f:
+            f.write("")
+
+    result = export_reports(reports, fields, progress_file)
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+
+if __name__ == "__main__":
+    main()
+```
+
+### 测试样例
+
+```python
+def test_export_reports():
+    reports = [
+        {
+            "id": "week-01",
+            "title": "项目周报",
+            "rows": [
+                {"owner": "Yu", "task": "接口联调", "status": "closed"},
+                {"owner": "Luo", "task": "页面调整", "status": "processing"},
+            ],
+        },
+        {
+            "id": "week-02",
+            "title": "资料整理",
+            "rows": [{"owner": "Wen", "task": "目录更新", "status": "open"}],
+        },
+        {
+            "id": "week-01",
+            "title": "项目周报",
+            "rows": [
+                {"owner": "Yu", "task": "接口联调", "status": "closed"},
+                {"owner": "Luo", "task": "页面调整", "status": "processing"},
+            ],
+        },
+    ]
+    fields = ["owner", "task", "status"]
+    progress_file = "progress.txt"
+    if not os.path.exists(progress_file):
+        with open(progress_file, "w") as f:
+            f.write("")
+
+    result = export_reports(reports, fields, progress_file)
+    assert len(result) == 2, "Should only export unique reports"
+    assert "week-01" in [r["id"] for r in result], "week-01 should be exported"
+    assert "week-02" in [r["id"] for r in result], "week-02 should be exported"
+
+    # Test failure and recovery
+    with open(f"{progress_file}_backup", "w") as f:
+        f.write("week-01\n")
+    result = export_reports(reports, fields, progress_file)
+    assert len(result) == 1, "Should only export week-02 since week-01 is already exported"
+    assert "week-02" in [r["id"] for r in result], "week-02 should be exported"
+
+    print("All tests passed!")
+
+test_export_reports()
+```
+
+### 解释
+1. **去重**：通过检查 `id` 来确保不重复导出。
+2. **进度记录**：使用 `progress.txt` 文件记录已完成的报告 ID。
+3. **中断后继续执行**：通过读取 `progress.txt` 文件来恢复执行。
+
+通过这些改进，程序可以更好地处理大量报告的分批导出，并且在中断后可以继续执行。

@@ -1,0 +1,32 @@
+### 工作群通知
+
+各位同事，客户演示将在 30 分钟后开始，现场网络连接较慢。请先准备本地演示资料，检查账号并确保一切正常。如发现任何问题，请立即汇总给项目负责人。祝演示顺利！
+
+---
+
+**资料事实**：客户演示将在 30 分钟后开始，现场网络连接较慢。
+
+**待确认信息**：是否需要提前准备本地演示资料、检查账号。
+
+**建议**：提前准备本地演示资料，检查账号并确保一切正常。如发现任何问题，请立即汇总给项目负责人。
+
+---
+
+**代码任务**：无代码任务，但可以编写一个简单的脚本来检查账号状态。例如，使用 Python 检查邮箱是否可以正常发送邮件。
+
+```python
+import smtplib
+
+def check_email():
+    try:
+        server = smtplib.SMTP('smtp.example.com', 587)
+        server.starttls()
+        server.login('your_email@example.com', 'your_password')
+        print("Email account is working properly.")
+    except Exception as e:
+        print(f"Email account check failed: {e}")
+
+check_email()
+```
+
+请根据实际情况调整邮箱服务器和登录信息。

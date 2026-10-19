@@ -1,0 +1,85 @@
+### 现象
+- 后台服务在连续请求下出现连接数上升。
+- 响应时间变慢。
+- 重启服务后，连接数和响应时间短暂恢复正常。
+
+### 假设
+1. 连接数上升可能是由于连接泄漏。
+2. 响应时间变慢可能是由于并发请求过多导致的负载增长。
+3. 重启服务后，连接池被清空，因此暂时恢复正常。
+
+### 检查
+#### 1. 采集数据
+- **连接数统计**：记录服务启动后的连接数变化。
+- **响应时间统计**：记录请求的平均响应时间。
+- **日志信息**：检查服务日志，寻找异常连接或错误信息。
+- **系统资源监控**：监控CPU、内存使用情况，检查是否有资源瓶颈。
+
+#### 2. 区分连接泄漏和负载增长
+- **连接数统计**：通过日志或监控工具记录连接数的变化。如果连接数持续增加且没有明显的减少，可能是连接泄漏。
+- **响应时间统计**：如果响应时间在连接数增加的同时变慢，可能是负载增长导致的。
+- **日志信息**：检查日志中是否有连接长时间未关闭的记录，或者是否有大量请求的记录。
+
+### 处理
+#### 1. 检查连接池配置
+- 确认连接池的最大连接数是否合理。
+- 检查连接池的超时设置，确保连接在超时后能被正确关闭。
+
+#### 2. 优化代码
+- 检查代码中是否有未关闭的连接，确保每个连接在使用后都能正确关闭。
+- 使用上下文管理器（如 `with` 语句）来管理数据库连接，确保连接在使用完毕后自动关闭。
+
+#### 3. 调整负载均衡
+- 如果是负载增长导致的响应变慢，可以考虑调整负载均衡策略，增加服务器资源或优化请求处理逻辑。
+
+### 验证
+- **重启服务**：重启服务后，观察连接数和响应时间的变化。
+- **持续监控**：在服务运行一段时间后，继续监控连接数和响应时间，确保问题得到解决。
+- **压力测试**：进行压力测试，模拟高并发请求，确保服务在高负载下仍能正常运行。
+
+### 实现代码示例
+```python
+import time
+import logging
+from contextlib import contextmanager
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+# 配置日志
+logging.basicConfig(level=logging.INFO)
+
+# 创建数据库引擎
+engine = create_engine('sqlite:///example.db')
+Session = sessionmaker(bind=engine)
+
+@contextmanager
+def session_scope():
+    """Provide a transactional scope around a series of operations."""
+    session = Session()
+    try:
+        yield session
+        session.commit()
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+# 示例函数
+def process_request():
+    with session_scope() as session:
+        # 模拟数据库操作
+        time.sleep(0.1)
+        logging.info("Request processed")
+
+# 主函数
+def main():
+    while True:
+        process_request()
+        time.sleep(0.1)
+
+if __name__ == "__main__":
+    main()
+```
+
+通过以上步骤和代码示例，可以有效排查和解决后台服务在连续请求下的连接数上升和响应变慢问题。

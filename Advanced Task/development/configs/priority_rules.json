@@ -1,0 +1,26 @@
+{
+  "interactive_base": 60,
+  "batch_base": 20,
+  "task_bonus": {
+    "live_notice": 30,
+    "incident_analysis": 25,
+    "policy_lookup": 15,
+    "code_review": 5,
+    "document_summary": 0,
+    "office_plan": 0,
+    "code_rewrite": -5
+  },
+  "deadline_bonus": [
+    {"max_ms": 20000, "bonus": 20},
+    {"max_ms": 45000, "bonus": 10},
+    {"max_ms": 180000, "bonus": 0},
+    {"max_ms": 999999999, "bonus": -5}
+  ],
+  "aging_interval_s": 10,
+  "aging_bonus": 1,
+  "aging_cap": 30,
+  "starvation_threshold_s": 8,
+  "starvation_bonus": 100,
+  "high_threshold": 80,
+  "medium_threshold": 45
+}

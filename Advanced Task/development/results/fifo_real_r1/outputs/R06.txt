@@ -1,0 +1,75 @@
+### 现象
+- 后台服务在连续请求下出现连接数上升。
+- 响应时间变慢。
+- 重启服务后，连接数和响应时间短暂恢复正常。
+
+### 假设
+1. 连接数上升可能是由于连接泄漏。
+2. 响应时间变慢可能是由于并发请求过多导致的资源竞争。
+3. 重启服务后短暂恢复可能是因为清理了未关闭的连接。
+
+### 检查
+#### 1. 采集数据
+- **连接数统计**：记录每个请求的连接数变化。
+- **响应时间**：记录每个请求的响应时间。
+- **日志信息**：详细记录请求处理过程中的日志信息，包括连接建立和关闭的时间点。
+- **系统资源使用情况**：监控CPU、内存、磁盘I/O等资源的使用情况。
+
+#### 2. 区分连接泄漏和负载增长
+- **连接泄漏**：通过日志和连接数统计，观察是否有连接长时间未关闭的情况。
+- **负载增长**：通过响应时间和系统资源使用情况，分析是否由于并发请求过多导致资源竞争加剧。
+
+### 处理
+#### 1. 连接泄漏
+- **检查代码**：检查代码中是否有未关闭的连接，特别是数据库连接、网络连接等。
+- **使用上下文管理器**：确保所有连接在使用完毕后都能被正确关闭，例如使用 `with` 语句。
+- **连接池优化**：优化连接池的配置，确保连接池能够有效管理连接的生命周期。
+
+#### 2. 负载增长
+- **增加资源**：如果资源使用情况达到瓶颈，考虑增加服务器资源，如增加CPU、内存等。
+- **优化代码**：优化代码逻辑，减少不必要的资源消耗。
+- **异步处理**：使用异步处理机制，如异步I/O，减少阻塞时间，提高响应速度。
+
+### 验证
+- **重启服务**：重启服务，观察连接数和响应时间是否恢复正常。
+- **压力测试**：进行压力测试，模拟高并发请求，观察服务的表现。
+- **持续监控**：持续监控服务的运行状态，确保问题得到彻底解决。
+
+### 实现代码示例
+```python
+import time
+import logging
+from contextlib import contextmanager
+
+# 设置日志
+logging.basicConfig(level=logging.DEBUG)
+
+@contextmanager
+def managed_connection():
+    connection = establish_connection()  # 假设的连接建立函数
+    try:
+        yield connection
+    finally:
+        connection.close()
+
+def process_request():
+    with managed_connection() as conn:
+        start_time = time.time()
+        # 处理请求
+        end_time = time.time()
+        logging.info(f"Request processed in {end_time - start_time:.4f} seconds")
+
+def establish_connection():
+    # 假设的连接建立逻辑
+    logging.info("Connection established")
+    return "connection"
+
+def main():
+    for _ in range(1000):  # 模拟1000个请求
+        process_request()
+
+if __name__ == "__main__":
+    main()
+```
+
+通过上述步骤和代码示例，可以有效地排查和解决后台服务在连续请求下的问题。

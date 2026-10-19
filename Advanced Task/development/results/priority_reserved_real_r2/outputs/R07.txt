@@ -1,0 +1,93 @@
+### 资料事实
+
+1. **`render_csv` 函数**：负责将给定的 `rows` 和 `fields` 转换为 CSV 格式的字符串。
+2. **`export_reports` 函数**：负责批量导出报告，将每个报告的 `id`、`title` 和 `rows` 转换为 CSV 格式，并将结果存储在一个字典列表中。
+3. **`main` 函数**：负责生成示例数据并调用 `export_reports` 函数进行导出，最后将结果以 JSON 格式打印出来。
+
+### 待确认信息
+
+1. **批量导出的数据流**：从 `reports` 列表开始，每个报告的 `rows` 被转换为 CSV 格式，然后将 `id`、`title` 和 CSV 内容打包成字典列表。
+2. **在大量报告、字段缺失和导出中断情境下的问题**：
+   - 大量报告：内存使用量可能增加，需要考虑优化内存使用。
+   - 字段缺失：`render_csv` 函数会忽略 `extrasaction="ignore"` 的字段，但需要确认是否所有报告都包含相同的字段。
+   - 导出中断：需要考虑如何处理导出过程中可能出现的中断情况，例如文件写入错误。
+
+### 建议
+
+1. **优化内存使用**：对于大量报告，可以考虑分批处理，而不是一次性加载所有报告。
+2. **处理字段缺失**：在 `render_csv` 函数中增加检查，确保所有报告的 `rows` 都包含相同的字段。
+3. **处理导出中断**：增加异常处理机制，确保在导出过程中遇到错误时能够妥善处理。
+
+### 改造顺序
+
+1. **优化内存使用**：首先优化内存使用，分批处理报告。
+2. **处理字段缺失**：确保所有报告的 `rows` 都包含相同的字段。
+3. **处理导出中断**：增加异常处理机制，确保在导出过程中遇到错误时能够妥善处理。
+
+### 验证方法
+
+1. **优化内存使用**：
+   - 使用分批处理报告，确保在处理大量报告时不会导致内存溢出。
+   - 使用 `pandas` 库的 `read_csv` 和 `to_csv` 方法，验证分批处理的效果。
+
+2. **处理字段缺失**：
+   - 在 `render_csv` 函数中增加检查，确保所有报告的 `rows` 都包含相同的字段。
+   - 生成包含不同字段的报告，验证 `render_csv` 函数是否能够正确处理。
+
+3. **处理导出中断**：
+   - 在 `export_reports` 函数中增加异常处理机制，确保在导出过程中遇到错误时能够妥善处理。
+   - 模拟导出中断情况，验证异常处理机制是否能够正确处理。
+
+### 示例代码
+
+```python
+import csv
+import io
+import json
+import pandas as pd
+
+def render_csv(rows, fields):
+    output = io.StringIO(newline="")
+    writer = csv.DictWriter(output, fieldnames=fields, extrasaction="ignore")
+    writer.writeheader()
+    writer.writerows(rows)
+    return output.getvalue()
+
+def export_reports(reports, fields):
+    exported = []
+    for report in reports:
+        try:
+            csv_content = render_csv(report["rows"], fields)
+            exported.append({
+                "id": report["id"],
+                "title": report["title"],
+                "csv": csv_content,
+            })
+        except Exception as e:
+            print(f"Error exporting report {report['id']}: {e}")
+    return exported
+
+def main():
+    reports = [
+        {
+            "id": "week-01",
+            "title": "项目周报",
+            "rows": [
+                {"owner": "Yu", "task": "接口联调", "status": "closed"},
+                {"owner": "Luo", "task": "页面调整", "status": "processing"},
+            ],
+        },
+        {
+            "id": "week-02",
+            "title": "资料整理",
+            "rows": [{"owner": "Wen", "task": "目录更新", "status": "open"}],
+        },
+    ]
+    result = export_reports(reports, ["owner", "task", "status"])
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+
+if __name__ == "__main__":
+    main()
+```
+
+通过以上步骤和验证方法，可以逐步优化和改进代码，确保其在各种情况下都能稳定运行。

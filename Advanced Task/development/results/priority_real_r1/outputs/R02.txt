@@ -1,0 +1,153 @@
+### 资料
+为了处理较多报告的分批导出，我们将增加单报告失败记录、进度记录和中断后继续执行功能。我们将使用 Python 标准库来实现这些功能，并确保去重和恢复依据清晰。
+
+### 待确认信息
+1. **报告文件的存储路径**：需要确认报告文件的存储路径。
+2. **失败报告的存储路径**：需要确认失败报告的存储路径。
+3. **进度记录的存储路径**：需要确认进度记录的存储路径。
+
+### 建议
+1. **使用 `os` 和 `shutil` 库**：用于文件操作和路径管理。
+2. **使用 `json` 库**：用于保存和读取进度记录。
+3. **使用 `csv` 库**：用于生成 CSV 文件。
+4. **使用 `logging` 库**：用于记录日志，便于调试和追踪。
+
+### 实现
+
+```python
+import csv
+import io
+import json
+import os
+import shutil
+import logging
+
+# 设置日志
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def render_csv(rows, fields):
+    output = io.StringIO(newline="")
+    writer = csv.DictWriter(output, fieldnames=fields, extrasaction="ignore")
+    writer.writeheader()
+    writer.writerows(rows)
+    return output.getvalue()
+
+def export_report(report, fields, output_dir):
+    try:
+        csv_content = render_csv(report["rows"], fields)
+        with open(os.path.join(output_dir, f"{report['id']}.csv"), 'w', newline='') as f:
+            f.write(csv_content)
+        return True
+    except Exception as e:
+        logging.error(f"Failed to export report {report['id']}: {e}")
+        return False
+
+def export_reports(reports, fields, output_dir, progress_file):
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    if os.path.exists(progress_file):
+        with open(progress_file, 'r') as f:
+            progress = json.load(f)
+    else:
+        progress = {}
+
+    for report_id in reports:
+        if report_id in progress and progress[report_id]:
+            logging.info(f"Report {report_id} already exported, skipping.")
+            continue
+
+        report = next((r for r in reports if r["id"] == report_id), None)
+        if report:
+            success = export_report(report, fields, output_dir)
+            progress[report_id] = success
+            with open(progress_file, 'w') as f:
+                json.dump(progress, f, indent=2)
+
+def main():
+    reports = [
+        {
+            "id": "week-01",
+            "title": "项目周报",
+            "rows": [
+                {"owner": "Yu", "task": "接口联调", "status": "closed"},
+                {"owner": "Luo", "task": "页面调整", "status": "processing"},
+            ],
+        },
+        {
+            "id": "week-02",
+            "title": "资料整理",
+            "rows": [{"owner": "Wen", "task": "目录更新", "status": "open"}],
+        },
+    ]
+    fields = ["owner", "task", "status"]
+    output_dir = "output_reports"
+    progress_file = "progress.json"
+
+    export_reports(reports, fields, output_dir, progress_file)
+    print(f"Exported reports to {output_dir}")
+
+if __name__ == "__main__":
+    main()
+```
+
+### 测试样例
+
+```python
+import os
+
+def test_export_reports():
+    reports = [
+        {
+            "id": "week-01",
+            "title": "项目周报",
+            "rows": [
+                {"owner": "Yu", "task": "接口联调", "status": "closed"},
+                {"owner": "Luo", "task": "页面调整", "status": "processing"},
+            ],
+        },
+        {
+            "id": "week-02",
+            "title": "资料整理",
+            "rows": [{"owner": "Wen", "task": "目录更新", "status": "open"}],
+        },
+    ]
+    fields = ["owner", "task", "status"]
+    output_dir = "test_output"
+    progress_file = "test_progress.json"
+
+    if os.path.exists(output_dir):
+        shutil.rmtree(output_dir)
+    if os.path.exists(progress_file):
+        os.remove(progress_file)
+
+    export_reports(reports, fields, output_dir, progress_file)
+
+    assert os.path.exists(output_dir)
+    assert os.path.exists(progress_file)
+
+    with open(os.path.join(output_dir, "week-01.csv"), 'r') as f:
+        content = f.read()
+        assert "Yu" in content
+        assert "Luo" in content
+
+    with open(os.path.join(output_dir, "week-02.csv"), 'r') as f:
+        content = f.read()
+        assert "Wen" in content
+
+    with open(progress_file, 'r') as f:
+        progress = json.load(f)
+        assert progress["week-01"] == True
+        assert progress["week-02"] == True
+
+test_export_reports()
+```
+
+### 解释
+1. **`render_csv`**：生成 CSV 内容。
+2. **`export_report`**：导出单个报告，记录成功或失败。
+3. **`export_reports`**：批量导出报告，记录进度，并处理失败报告。
+4. **`main`**：主函数，调用导出函数。
+5. **测试样例**：确保所有报告成功导出，并记录进度。
+
+通过这种方式，我们可以有效地处理多个报告的分批导出，并确保失败报告可以被记录和恢复。

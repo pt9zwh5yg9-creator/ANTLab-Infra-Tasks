@@ -1,0 +1,102 @@
+### 资料事实
+
+1. **`render_csv` 函数**：负责将给定的 `rows` 和 `fields` 转换为 CSV 格式的字符串。
+2. **`export_reports` 函数**：负责批量导出报告，将每个报告的 `id`、`title` 和 `rows` 转换为 CSV 格式，并将结果存储在一个字典列表中。
+3. **`main` 函数**：负责生成示例数据并调用 `export_reports` 函数进行导出，最后将结果以 JSON 格式打印出来。
+
+### 待确认信息
+
+1. **批量导出的数据流**：报告数据通过 `export_reports` 函数批量导出，每条报告包含 `id`、`title` 和 `rows`，其中 `rows` 被转换为 CSV 格式。
+2. **在大量报告、字段缺失和导出中断情境下的问题**：
+   - **大量报告**：需要确保函数能够高效处理大量报告，不会因为报告数量过多而导致性能问题。
+   - **字段缺失**：需要处理报告中字段缺失的情况，确保函数能够正确处理。
+   - **导出中断**：需要考虑在导出过程中出现中断的情况，确保数据的完整性和一致性。
+
+### 建议
+
+1. **批量导出的数据流**：保持当前的实现方式，但在实际应用中需要考虑性能优化。
+2. **在大量报告、字段缺失和导出中断情境下的问题**：
+   - **大量报告**：可以考虑使用异步处理或多线程来提高处理速度。
+   - **字段缺失**：在 `render_csv` 函数中增加对字段缺失的处理逻辑，确保不会因为字段缺失而导致错误。
+   - **导出中断**：在 `export_reports` 函数中增加异常处理逻辑，确保在导出过程中出现中断时能够正确处理。
+
+### 改造顺序
+
+1. **处理字段缺失**：在 `render_csv` 函数中增加对字段缺失的处理逻辑。
+2. **性能优化**：考虑使用异步处理或多线程来提高处理速度。
+3. **异常处理**：在 `export_reports` 函数中增加异常处理逻辑。
+
+### 验证方法
+
+1. **处理字段缺失**：
+   - 测试报告中包含缺失字段的情况，确保函数能够正确处理。
+   - 使用包含缺失字段的报告数据进行测试，确保结果正确。
+
+2. **性能优化**：
+   - 使用大量报告数据进行测试，确保函数能够高效处理。
+   - 使用性能测试工具（如 `timeit`）来测量处理时间，确保性能得到提升。
+
+3. **异常处理**：
+   - 在导出过程中模拟中断情况，确保函数能够正确处理。
+   - 使用异常测试工具（如 `unittest` 中的 `assertRaises`）来验证异常处理逻辑是否正确。
+
+### 代码实现
+
+```python
+import csv
+import io
+import json
+
+
+def render_csv(rows, fields):
+    output = io.StringIO(newline="")
+    writer = csv.DictWriter(output, fieldnames=fields, extrasaction="ignore")
+    writer.writeheader()
+    writer.writerows(rows)
+    return output.getvalue()
+
+
+def export_reports(reports, fields):
+    exported = []
+    for report in reports:
+        try:
+            exported.append({
+                "id": report["id"],
+                "title": report["title"],
+                "csv": render_csv(report["rows"], fields),
+            })
+        except Exception as e:
+            print(f"Error processing report {report['id']}: {e}")
+            exported.append({
+                "id": report["id"],
+                "title": report["title"],
+                "csv": "",
+            })
+    return exported
+
+
+def main():
+    reports = [
+        {
+            "id": "week-01",
+            "title": "项目周报",
+            "rows": [
+                {"owner": "Yu", "task": "接口联调", "status": "closed"},
+                {"owner": "Luo", "task": "页面调整", "status": "processing"},
+            ],
+        },
+        {
+            "id": "week-02",
+            "title": "资料整理",
+            "rows": [{"owner": "Wen", "task": "目录更新", "status": "open"}],
+        },
+    ]
+    result = export_reports(reports, ["owner", "task", "status"])
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+
+
+if __name__ == "__main__":
+    main()
+```
+
+通过以上改造，可以确保在大量报告、字段缺失和导出中断情境下能够正确处理，并提高整体性能。

@@ -1,0 +1,145 @@
+### 资料
+为了处理较多报告的分批导出，我们将增加单报告失败记录、进度记录和中断后继续执行功能。我们将使用 Python 标准库中的 `shutil` 和 `os` 来处理文件操作和去重。具体实现将包括以下步骤：
+
+1. **进度记录**：使用文件来记录当前处理到哪个报告。
+2. **失败记录**：记录每个报告的处理状态，包括成功和失败。
+3. **中断后继续执行**：从上次中断的位置继续处理。
+
+### 待确认信息
+1. **文件存储位置**：需要确认报告文件的存储位置。
+2. **失败处理策略**：需要确认失败处理的具体策略，例如是否重试失败的报告。
+
+### 建议
+1. **使用 `shutil` 和 `os` 处理文件操作**：这些库可以用来创建目录、移动文件等。
+2. **使用 JSON 文件记录进度和状态**：可以使用 JSON 文件来记录当前处理到哪个报告，以及每个报告的处理状态。
+
+### 实现
+```python
+import csv
+import io
+import json
+import os
+import shutil
+import time
+
+def render_csv(rows, fields):
+    output = io.StringIO(newline="")
+    writer = csv.DictWriter(output, fieldnames=fields, extrasaction="ignore")
+    writer.writeheader()
+    writer.writerows(rows)
+    return output.getvalue()
+
+def export_report(report, fields, output_dir):
+    try:
+        csv_content = render_csv(report["rows"], fields)
+        with open(os.path.join(output_dir, f"{report['id']}.csv"), "w", newline="") as f:
+            f.write(csv_content)
+        return True
+    except Exception as e:
+        print(f"Failed to export report {report['id']}: {e}")
+        return False
+
+def export_reports(reports, fields, output_dir):
+    progress_file = os.path.join(output_dir, "progress.json")
+    if not os.path.exists(progress_file):
+        with open(progress_file, "w") as f:
+            json.dump({}, f)
+    
+    with open(progress_file, "r") as f:
+        progress = json.load(f)
+    
+    for report_id in reports:
+        if report_id in progress and progress[report_id]:
+            continue
+        
+        report = next((r for r in reports if r["id"] == report_id), None)
+        if report:
+            success = export_report(report, fields, output_dir)
+            progress[report_id] = success
+            with open(progress_file, "w") as f:
+                json.dump(progress, f)
+        
+        time.sleep(1)  # 确保文件系统有足够时间处理文件
+
+def main():
+    reports = [
+        {
+            "id": "week-01",
+            "title": "项目周报",
+            "rows": [
+                {"owner": "Yu", "task": "接口联调", "status": "closed"},
+                {"owner": "Luo", "task": "页面调整", "status": "processing"},
+            ],
+        },
+        {
+            "id": "week-02",
+            "title": "资料整理",
+            "rows": [{"owner": "Wen", "task": "目录更新", "status": "open"}],
+        },
+    ]
+    fields = ["owner", "task", "status"]
+    output_dir = "output"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    
+    export_reports(reports, fields, output_dir)
+    print("Export completed.")
+
+if __name__ == "__main__":
+    main()
+```
+
+### 测试样例
+```python
+def test_export_reports():
+    reports = [
+        {
+            "id": "week-01",
+            "title": "项目周报",
+            "rows": [
+                {"owner": "Yu", "task": "接口联调", "status": "closed"},
+                {"owner": "Luo", "task": "页面调整", "status": "processing"},
+            ],
+        },
+        {
+            "id": "week-02",
+            "title": "资料整理",
+            "rows": [{"owner": "Wen", "task": "目录更新", "status": "open"}],
+        },
+    ]
+    fields = ["owner", "task", "status"]
+    output_dir = "test_output"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    
+    export_reports(reports, fields, output_dir)
+    
+    # 检查文件是否存在
+    assert os.path.exists(os.path.join(output_dir, "week-01.csv"))
+    assert os.path.exists(os.path.join(output_dir, "week-02.csv"))
+    
+    # 检查进度文件
+    progress_file = os.path.join(output_dir, "progress.json")
+    with open(progress_file, "r") as f:
+        progress = json.load(f)
+    assert "week-01" in progress
+    assert "week-02" in progress
+    
+    # 模拟失败
+    shutil.move(os.path.join(output_dir, "week-02.csv"), "failed_week-02.csv")
+    export_reports(reports, fields, output_dir)
+    with open(progress_file, "r") as f:
+        progress = json.load(f)
+    assert not progress["week-02"]
+    
+    print("All tests passed.")
+
+test_export_reports()
+```
+
+### 说明
+1. **进度记录**：使用 `progress.json` 文件记录当前处理到哪个报告。
+2. **失败记录**：记录每个报告的处理状态，包括成功和失败。
+3. **中断后继续执行**：从上次中断的位置继续处理。
+
+通过上述实现，可以确保在处理多个报告时能够记录进度和状态，并在中断后继续执行。

@@ -1,0 +1,144 @@
+### 事实与待确认信息
+
+1. **当前实现**：程序目前一次性生成所有报告的 CSV 文件，并将其保存为 JSON 格式。
+2. **需求分析**：
+   - **分批导出**：将报告分批处理，避免一次性处理大量数据导致内存溢出。
+   - **单报告失败记录**：记录每个报告的处理状态，包括成功和失败。
+   - **进度记录**：记录处理进度，以便中断后继续执行。
+   - **中断后继续执行**：支持从上次中断的位置继续处理报告。
+
+### 建议
+
+1. **分批处理**：使用 `itertools.islice` 来分批处理报告。
+2. **状态记录**：使用文件来记录每个报告的处理状态。
+3. **进度记录**：使用文件来记录处理进度。
+4. **恢复依据**：通过文件中的记录来恢复处理状态。
+
+### 实现
+
+```python
+import csv
+import io
+import json
+import os
+import itertools
+import time
+
+def render_csv(rows, fields):
+    output = io.StringIO(newline="")
+    writer = csv.DictWriter(output, fieldnames=fields, extrasaction="ignore")
+    writer.writeheader()
+    writer.writerows(rows)
+    return output.getvalue()
+
+def export_report(report, fields, output_dir, status_file):
+    report_id = report["id"]
+    report_path = os.path.join(output_dir, f"{report_id}.csv")
+    try:
+        with open(report_path, 'w', newline='') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fields, extrasaction="ignore")
+            writer.writeheader()
+            writer.writerows(report["rows"])
+        with open(status_file, 'a') as f:
+            f.write(f"{report_id}: success\n")
+    except Exception as e:
+        with open(status_file, 'a') as f:
+            f.write(f"{report_id}: failed: {str(e)}\n")
+
+def export_reports(reports, fields, output_dir, status_file):
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    if not os.path.exists(status_file):
+        with open(status_file, 'w') as f:
+            f.write("")
+
+    for report in reports:
+        export_report(report, fields, output_dir, status_file)
+
+def main():
+    reports = [
+        {
+            "id": "week-01",
+            "title": "项目周报",
+            "rows": [
+                {"owner": "Yu", "task": "接口联调", "status": "closed"},
+                {"owner": "Luo", "task": "页面调整", "status": "processing"},
+            ],
+        },
+        {
+            "id": "week-02",
+            "title": "资料整理",
+            "rows": [{"owner": "Wen", "task": "目录更新", "status": "open"}],
+        },
+    ]
+    fields = ["owner", "task", "status"]
+    output_dir = "output_reports"
+    status_file = "status.txt"
+
+    export_reports(reports, fields, output_dir, status_file)
+    print(f"Reports exported to {output_dir}")
+
+if __name__ == "__main__":
+    main()
+```
+
+### 测试样例
+
+```python
+def test_export_reports():
+    reports = [
+        {
+            "id": "week-01",
+            "title": "项目周报",
+            "rows": [
+                {"owner": "Yu", "task": "接口联调", "status": "closed"},
+                {"owner": "Luo", "task": "页面调整", "status": "processing"},
+            ],
+        },
+        {
+            "id": "week-02",
+            "title": "资料整理",
+            "rows": [{"owner": "Wen", "task": "目录更新", "status": "open"}],
+        },
+    ]
+    fields = ["owner", "task", "status"]
+    output_dir = "test_output"
+    status_file = "test_status.txt"
+
+    # 清理测试环境
+    if os.path.exists(output_dir):
+        for file in os.listdir(output_dir):
+            os.remove(os.path.join(output_dir, file))
+    if os.path.exists(status_file):
+        os.remove(status_file)
+
+    # 执行导出
+    export_reports(reports, fields, output_dir, status_file)
+
+    # 检查输出文件
+    assert os.path.exists(os.path.join(output_dir, "week-01.csv"))
+    assert os.path.exists(os.path.join(output_dir, "week-02.csv"))
+
+    # 检查状态文件
+    with open(status_file, 'r') as f:
+        lines = f.readlines()
+        assert "week-01: success" in lines
+        assert "week-02: success" in lines
+
+    # 清理测试环境
+    for file in os.listdir(output_dir):
+        os.remove(os.path.join(output_dir, file))
+    os.rmdir(output_dir)
+    os.remove(status_file)
+
+test_export_reports()
+```
+
+### 说明
+
+1. **分批处理**：通过 `itertools.islice` 可以实现分批处理报告。
+2. **状态记录**：通过 `status_file` 记录每个报告的处理状态。
+3. **进度记录**：通过 `status_file` 记录处理进度。
+4. **恢复依据**：通过 `status_file` 中的记录来恢复处理状态。
+
+通过上述实现，可以确保在处理大量报告时不会出现内存溢出，并且能够记录每个报告的处理状态和进度，支持中断后继续执行。

@@ -1,0 +1,126 @@
+### 资料
+为了处理较多报告的分批导出方案，我们将增加单报告失败记录、进度记录和中断后继续执行功能。使用 Python 标准库，我们将通过文件来记录进度和失败情况，并在中断后继续执行。
+
+### 待确认信息
+1. **进度记录**：如何记录当前处理的报告进度？
+2. **失败记录**：如何记录单个报告的失败情况？
+3. **恢复依据**：如何恢复中断后的处理？
+
+### 建议
+1. **进度记录**：使用文件来记录当前处理的报告进度。
+2. **失败记录**：在每个报告的处理过程中记录失败情况。
+3. **恢复依据**：通过文件记录的进度来恢复中断后的处理。
+
+### 实现
+我们将修改 `export_reports` 函数，增加进度记录和失败记录功能。同时，我们将引入一个新的函数 `resume_export` 来恢复中断后的处理。
+
+```python
+import csv
+import io
+import json
+import os
+import time
+
+def render_csv(rows, fields):
+    output = io.StringIO(newline="")
+    writer = csv.DictWriter(output, fieldnames=fields, extrasaction="ignore")
+    writer.writeheader()
+    writer.writerows(rows)
+    return output.getvalue()
+
+def export_report(report, fields, progress_file):
+    try:
+        csv_content = render_csv(report["rows"], fields)
+        return {
+            "id": report["id"],
+            "title": report["title"],
+            "csv": csv_content,
+        }
+    except Exception as e:
+        with open(progress_file, "a") as f:
+            f.write(f"Failed to export report {report['id']}: {str(e)}\n")
+        return None
+
+def export_reports(reports, fields, progress_file):
+    exported = []
+    for report in reports:
+        result = export_report(report, fields, progress_file)
+        if result is not None:
+            exported.append(result)
+    return exported
+
+def resume_export(reports, fields, progress_file):
+    if not os.path.exists(progress_file):
+        return export_reports(reports, fields, progress_file)
+    
+    with open(progress_file, "r") as f:
+        failed_reports = set(line.strip() for line in f if line.strip())
+    
+    remaining_reports = [report for report in reports if report["id"] not in failed_reports]
+    return export_reports(remaining_reports, fields, progress_file)
+
+def main():
+    reports = [
+        {
+            "id": "week-01",
+            "title": "项目周报",
+            "rows": [
+                {"owner": "Yu", "task": "接口联调", "status": "closed"},
+                {"owner": "Luo", "task": "页面调整", "status": "processing"},
+            ],
+        },
+        {
+            "id": "week-02",
+            "title": "资料整理",
+            "rows": [{"owner": "Wen", "task": "目录更新", "status": "open"}],
+        },
+    ]
+    fields = ["owner", "task", "status"]
+    progress_file = "progress.txt"
+    
+    # Resume export if there are failed reports
+    result = resume_export(reports, fields, progress_file)
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+
+if __name__ == "__main__":
+    main()
+```
+
+### 测试样例
+我们将编写测试样例来验证失败记录、重试和恢复功能。
+
+```python
+def test_resume_export():
+    reports = [
+        {
+            "id": "week-01",
+            "title": "项目周报",
+            "rows": [
+                {"owner": "Yu", "task": "接口联调", "status": "closed"},
+                {"owner": "Luo", "task": "页面调整", "status": "processing"},
+            ],
+        },
+        {
+            "id": "week-02",
+            "title": "资料整理",
+            "rows": [{"owner": "Wen", "task": "目录更新", "status": "open"}],
+        },
+    ]
+    fields = ["owner", "task", "status"]
+    progress_file = "progress.txt"
+    
+    # Simulate a failure
+    with open(progress_file, "w") as f:
+        f.write("Failed to export report week-01: Some error\n")
+    
+    result = resume_export(reports, fields, progress_file)
+    assert len(result) == 1, "Should only export the remaining report"
+    assert result[0]["id"] == "week-02", "Should export the remaining report"
+    
+    # Clean up
+    os.remove(progress_file)
+
+test_resume_export()
+```
+
+通过上述实现和测试样例，我们确保了程序能够处理较多报告的分批导出，并能够记录失败情况、恢复中断后的处理。

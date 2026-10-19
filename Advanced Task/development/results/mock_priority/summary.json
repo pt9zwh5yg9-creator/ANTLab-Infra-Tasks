@@ -1,0 +1,143 @@
+{
+  "total": 16,
+  "success": 16,
+  "failed": 0,
+  "deadline_met": 16,
+  "deadline_rate": 1.0,
+  "wait_avg_s": 0.347563848999755,
+  "wait_p95_s": 0.8822647830002097,
+  "ttft_avg_s": 0.4981233931872566,
+  "ttft_p95_s": 1.0334690649997356,
+  "completion_avg_s": 2.1791351406250214,
+  "completion_p95_s": 4.759560253000018,
+  "low_priority_max_wait_s": 0.7179273279998597,
+  "output_tokens": 17920,
+  "window_s": 10.760115623474121,
+  "throughput_tokens_per_s": 1665.409613341512,
+  "by_task_type": {
+    "document_summary": {
+      "total": 3,
+      "success": 3,
+      "deadline_met": 3,
+      "wait_avg_s": 0.35524528599974775,
+      "wait_p95_s": 0.5795757679998133,
+      "ttft_avg_s": 0.5057854216662842,
+      "ttft_p95_s": 0.7304267709996566,
+      "deadline_rate": 1.0
+    },
+    "office_plan": {
+      "total": 1,
+      "success": 1,
+      "deadline_met": 1,
+      "wait_avg_s": 0.00011287599954812322,
+      "wait_p95_s": 0.00011287599954812322,
+      "ttft_avg_s": 0.150461094000093,
+      "ttft_p95_s": 0.150461094000093,
+      "deadline_rate": 1.0
+    },
+    "code_rewrite": {
+      "total": 2,
+      "success": 2,
+      "deadline_met": 2,
+      "wait_avg_s": 0.00012895249938082998,
+      "wait_p95_s": 0.0001447119993827073,
+      "ttft_avg_s": 0.15049399849976908,
+      "ttft_p95_s": 0.15049624499988568,
+      "deadline_rate": 1.0
+    },
+    "live_notice": {
+      "total": 2,
+      "success": 2,
+      "deadline_met": 2,
+      "wait_avg_s": 0.44121532449980805,
+      "wait_p95_s": 0.8822647830002097,
+      "ttft_avg_s": 0.5920058834994961,
+      "ttft_p95_s": 1.0334690649997356,
+      "deadline_rate": 1.0
+    },
+    "policy_lookup": {
+      "total": 4,
+      "success": 4,
+      "deadline_met": 4,
+      "wait_avg_s": 0.37504175324988864,
+      "wait_p95_s": 0.6542927210002745,
+      "ttft_avg_s": 0.5255047984999237,
+      "ttft_p95_s": 0.8046294100004161,
+      "deadline_rate": 1.0
+    },
+    "incident_analysis": {
+      "total": 2,
+      "success": 2,
+      "deadline_met": 2,
+      "wait_avg_s": 0.45367839049959,
+      "wait_p95_s": 0.7644702819998201,
+      "ttft_avg_s": 0.6042641494996133,
+      "ttft_p95_s": 0.9152579219999097,
+      "deadline_rate": 1.0
+    },
+    "code_review": {
+      "total": 2,
+      "success": 2,
+      "deadline_met": 2,
+      "wait_avg_s": 0.6024802510000882,
+      "wait_p95_s": 0.7179273279998597,
+      "ttft_avg_s": 0.7533048374998543,
+      "ttft_p95_s": 0.8685496899997815,
+      "deadline_rate": 1.0
+    }
+  },
+  "by_interaction_mode": {
+    "batch": {
+      "total": 8,
+      "success": 8,
+      "deadline_met": 8,
+      "wait_avg_s": 0.2838833926247162,
+      "wait_p95_s": 0.7179273279998597,
+      "ttft_avg_s": 0.43442687887477405,
+      "ttft_p95_s": 0.8685496899997815,
+      "deadline_rate": 1.0
+    },
+    "interactive": {
+      "total": 8,
+      "success": 8,
+      "deadline_met": 8,
+      "wait_avg_s": 0.41124430537479384,
+      "wait_p95_s": 0.8822647830002097,
+      "ttft_avg_s": 0.5618199074997392,
+      "ttft_p95_s": 1.0334690649997356,
+      "deadline_rate": 1.0
+    }
+  },
+  "by_priority": {
+    "low": {
+      "total": 8,
+      "success": 8,
+      "deadline_met": 8,
+      "wait_avg_s": 0.2838833926247162,
+      "wait_p95_s": 0.7179273279998597,
+      "ttft_avg_s": 0.43442687887477405,
+      "ttft_p95_s": 0.8685496899997815,
+      "deadline_rate": 1.0
+    },
+    "high": {
+      "total": 8,
+      "success": 8,
+      "deadline_met": 8,
+      "wait_avg_s": 0.41124430537479384,
+      "wait_p95_s": 0.8822647830002097,
+      "ttft_avg_s": 0.5618199074997392,
+      "ttft_p95_s": 1.0334690649997356,
+      "deadline_rate": 1.0
+    }
+  },
+  "run_id": "mock_priority",
+  "policy": "priority",
+  "backend": "mock",
+  "slots": 4,
+  "aging_interval_s": 5.0,
+  "started_at": "2026-10-19T17:39:16.777+08:00",
+  "completed_at": "2026-10-19T17:39:27.541+08:00",
+  "requests_path": "/home/kiki/ANTLab-Infra-Tasks/Advanced Task/参考测试（仅作参考）/参考请求序列.jsonl",
+  "prompts_path": "/home/kiki/ANTLab-Infra-Tasks/Advanced Task/参考测试（仅作参考）/测试提示词.md",
+  "rules_path": "/home/kiki/ANTLab-Infra-Tasks/Advanced Task/development/configs/priority_rules.json"
+}

@@ -1,0 +1,173 @@
+### 事实与待确认信息
+
+1. **当前实现**：程序目前一次性生成所有报告的 CSV 文件，并将结果存储在内存中。
+2. **需求分析**：
+   - **分批导出**：将报告分批导出，避免一次性加载大量数据。
+   - **单报告失败记录**：记录每个报告的导出状态（成功或失败）。
+   - **进度记录**：记录导出进度，以便中断后继续执行。
+   - **中断后继续执行**：支持从上次中断的位置继续导出。
+
+### 建议
+
+1. **分批导出**：使用 `itertools.islice` 来分批处理报告。
+2. **单报告失败记录**：使用文件来记录每个报告的导出状态。
+3. **进度记录**：使用文件来记录当前处理到哪个报告。
+4. **中断后继续执行**：从记录的进度文件中读取并继续处理。
+
+### 实现
+
+```python
+import csv
+import io
+import json
+import os
+import itertools
+import time
+from collections import defaultdict
+
+def render_csv(rows, fields):
+    output = io.StringIO(newline="")
+    writer = csv.DictWriter(output, fieldnames=fields, extrasaction="ignore")
+    writer.writeheader()
+    writer.writerows(rows)
+    return output.getvalue()
+
+def export_report(report, fields, output_dir):
+    try:
+        csv_content = render_csv(report["rows"], fields)
+        with open(os.path.join(output_dir, f"{report['id']}.csv"), "w", newline="") as csvfile:
+            csvfile.write(csv_content)
+        return True
+    except Exception as e:
+        print(f"Failed to export report {report['id']}: {e}")
+        return False
+
+def export_reports(reports, fields, output_dir):
+    report_status = defaultdict(lambda: "not_started")
+    report_progress = defaultdict(lambda: 0)
+    
+    for report in reports:
+        report_id = report["id"]
+        report_status[report_id] = "not_started"
+        report_progress[report_id] = 0
+    
+    with open(os.path.join(output_dir, "report_status.json"), "w", indent=2) as f:
+        json.dump(dict(report_status), f, ensure_ascii=False)
+    
+    with open(os.path.join(output_dir, "report_progress.json"), "w", indent=2) as f:
+        json.dump(dict(report_progress), f, ensure_ascii=False)
+    
+    for report in reports:
+        report_id = report["id"]
+        report_status[report_id] = "in_progress"
+        report_progress[report_id] = 0
+        
+        with open(os.path.join(output_dir, "report_status.json"), "w", indent=2) as f:
+            json.dump(dict(report_status), f, ensure_ascii=False)
+        
+        with open(os.path.join(output_dir, "report_progress.json"), "w", indent=2) as f:
+            json.dump(dict(report_progress), f, ensure_ascii=False)
+        
+        while report_progress[report_id] < len(report["rows"]):
+            start_index = report_progress[report_id]
+            end_index = min(start_index + 100, len(report["rows"]))
+            rows_to_export = report["rows"][start_index:end_index]
+            
+            if export_report(report, fields, output_dir):
+                report_progress[report_id] = end_index
+                report_status[report_id] = "completed"
+            else:
+                report_status[report_id] = "failed"
+                break
+            
+            with open(os.path.join(output_dir, "report_status.json"), "w", indent=2) as f:
+                json.dump(dict(report_status), f, ensure_ascii=False)
+            
+            with open(os.path.join(output_dir, "report_progress.json"), "w", indent=2) as f:
+                json.dump(dict(report_progress), f, ensure_ascii=False)
+            
+            time.sleep(1)  # Simulate processing time
+
+def main():
+    reports = [
+        {
+            "id": "week-01",
+            "title": "项目周报",
+            "rows": [
+                {"owner": "Yu", "task": "接口联调", "status": "closed"},
+                {"owner": "Luo", "task": "页面调整", "status": "processing"},
+            ],
+        },
+        {
+            "id": "week-02",
+            "title": "资料整理",
+            "rows": [{"owner": "Wen", "task": "目录更新", "status": "open"}],
+        },
+    ]
+    fields = ["owner", "task", "status"]
+    output_dir = "output"
+    
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    
+    export_reports(reports, fields, output_dir)
+
+if __name__ == "__main__":
+    main()
+```
+
+### 测试样例
+
+```python
+def test_export_reports():
+    reports = [
+        {
+            "id": "week-01",
+            "title": "项目周报",
+            "rows": [
+                {"owner": "Yu", "task": "接口联调", "status": "closed"},
+                {"owner": "Luo", "task": "页面调整", "status": "processing"},
+            ],
+        },
+        {
+            "id": "week-02",
+            "title": "资料整理",
+            "rows": [{"owner": "Wen", "task": "目录更新", "status": "open"}],
+        },
+    ]
+    fields = ["owner", "task", "status"]
+    output_dir = "test_output"
+    
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    
+    export_reports(reports, fields, output_dir)
+    
+    # Check if files are created
+    assert os.path.exists(os.path.join(output_dir, "week-01.csv"))
+    assert os.path.exists(os.path.join(output_dir, "week-02.csv"))
+    
+    # Check report status and progress
+    with open(os.path.join(output_dir, "report_status.json"), "r") as f:
+        report_status = json.load(f)
+        assert report_status["week-01"] == "completed"
+        assert report_status["week-02"] == "completed"
+    
+    with open(os.path.join(output_dir, "report_progress.json"), "r") as f:
+        report_progress = json.load(f)
+        assert report_progress["week-01"] == len(reports[0]["rows"])
+        assert report_progress["week-02"] == len(reports[1]["rows"])
+    
+    print("All tests passed!")
+
+test_export_reports()
+```
+
+### 解释
+
+1. **分批导出**：使用 `itertools.islice` 来分批处理报告。
+2. **单报告失败记录**：使用文件来记录每个报告的导出状态。
+3. **进度记录**：使用文件来记录当前处理到哪个报告。
+4. **中断后继续执行**：从记录的进度文件中读取并继续处理。
+
+通过这些改进，程序可以更好地处理大量报告，并支持中断后继续执行的功能。

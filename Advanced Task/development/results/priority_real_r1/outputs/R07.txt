@@ -1,0 +1,93 @@
+### 资料事实
+
+1. **`render_csv` 函数**：负责将给定的 `rows` 和 `fields` 转换为 CSV 格式的字符串。
+2. **`export_reports` 函数**：负责批量导出报告，将每个报告的 `id`、`title` 和 `rows` 转换为 CSV 格式，并将结果存储在一个字典列表中。
+3. **`main` 函数**：负责生成示例数据并调用 `export_reports` 函数进行导出，最后将结果以 JSON 格式打印出来。
+
+### 待确认信息
+
+1. **批量导出的数据流**：从 `reports` 列表开始，每个报告的 `rows` 被转换为 CSV 格式，然后将 `id`、`title` 和 CSV 内容打包成字典列表。
+2. **在大量报告、字段缺失和导出中断情境下的问题**：
+   - 大量报告：内存消耗可能增加。
+   - 字段缺失：`render_csv` 函数会忽略 `extrasaction="ignore"` 的字段，但需要确认是否会影响导出结果。
+   - 导出中断：需要确认在导出过程中是否会出现中断，以及如何处理。
+
+### 建议
+
+1. **批量导出的数据流**：保持当前实现，但需要优化内存使用。
+2. **在大量报告、字段缺失和导出中断情境下的问题**：
+   - 大量报告：考虑使用生成器而不是列表来存储导出结果，以减少内存消耗。
+   - 字段缺失：确认 `extrasaction="ignore"` 的行为是否符合预期，如果不符合预期，则需要调整。
+   - 导出中断：考虑使用异常处理来捕获导出过程中可能出现的中断，并提供适当的错误处理机制。
+
+### 改造顺序
+
+1. **优化内存使用**：使用生成器而不是列表来存储导出结果。
+2. **确认 `extrasaction="ignore"` 的行为**：如果不符合预期，则调整 `render_csv` 函数。
+3. **异常处理**：在导出过程中添加异常处理机制。
+
+### 验证方法
+
+1. **优化内存使用**：
+   - 使用生成器：将 `export_reports` 函数改为生成器函数，生成每个报告的导出结果，而不是一次性生成所有报告。
+   - 测试：使用大量报告进行测试，观察内存使用情况。
+
+2. **确认 `extrasaction="ignore"` 的行为**：
+   - 测试：使用包含缺失字段的报告进行测试，确认 `render_csv` 函数是否正确处理缺失字段。
+   - 调整：如果不符合预期，则调整 `render_csv` 函数。
+
+3. **异常处理**：
+   - 测试：在导出过程中模拟中断情况，确认异常处理机制是否有效。
+   - 实现：在 `export_reports` 函数中添加异常处理代码，捕获并处理可能出现的异常。
+
+### 代码实现
+
+```python
+import csv
+import io
+import json
+
+
+def render_csv(rows, fields):
+    output = io.StringIO(newline="")
+    writer = csv.DictWriter(output, fieldnames=fields, extrasaction="ignore")
+    writer.writeheader()
+    writer.writerows(rows)
+    return output.getvalue()
+
+
+def export_reports(reports, fields):
+    for report in reports:
+        yield {
+            "id": report["id"],
+            "title": report["title"],
+            "csv": render_csv(report["rows"], fields),
+        }
+
+
+def main():
+    reports = [
+        {
+            "id": "week-01",
+            "title": "项目周报",
+            "rows": [
+                {"owner": "Yu", "task": "接口联调", "status": "closed"},
+                {"owner": "Luo", "task": "页面调整", "status": "processing"},
+            ],
+        },
+        {
+            "id": "week-02",
+            "title": "资料整理",
+            "rows": [{"owner": "Wen", "task": "目录更新", "status": "open"}],
+        },
+    ]
+    result = export_reports(reports, ["owner", "task", "status"])
+    for item in result:
+        print(json.dumps(item, ensure_ascii=False, indent=2))
+
+
+if __name__ == "__main__":
+    main()
+```
+
+通过上述改造，可以优化内存使用，确认 `extrasaction="ignore"` 的行为，并添加异常处理机制。

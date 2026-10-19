@@ -1,0 +1,169 @@
+### 资料
+为了处理较多报告的分批导出，我们将增加单报告失败记录、进度记录和中断后继续执行功能。我们将使用 Python 标准库来实现这些功能，并确保去重和恢复依据清晰。
+
+### 待确认信息
+1. **去重依据**：报告的 `id` 作为唯一标识符。
+2. **恢复依据**：报告的 `id` 作为恢复依据，确保在中断后继续执行。
+
+### 建议
+1. **使用 `csv.DictWriter`**：保持现有的 CSV 导出逻辑。
+2. **使用 `json`**：保持现有的 JSON 格式输出。
+3. **增加进度记录**：使用 `logging` 来记录进度。
+4. **增加失败记录**：记录失败的报告 ID。
+5. **增加中断后继续执行功能**：使用 `pickle` 来保存当前状态。
+
+### 实现
+
+```python
+import csv
+import io
+import json
+import logging
+import pickle
+import os
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def render_csv(rows, fields):
+    output = io.StringIO(newline="")
+    writer = csv.DictWriter(output, fieldnames=fields, extrasaction="ignore")
+    writer.writeheader()
+    writer.writerows(rows)
+    return output.getvalue()
+
+def export_report(report, fields, output_dir):
+    report_id = report["id"]
+    report_path = os.path.join(output_dir, f"{report_id}.csv")
+    try:
+        with open(report_path, 'w', newline='') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fields, extrasaction="ignore")
+            writer.writeheader()
+            writer.writerows(report["rows"])
+        logging.info(f"Report {report_id} exported successfully.")
+        return True
+    except Exception as e:
+        logging.error(f"Failed to export report {report_id}: {e}")
+        return False
+
+def export_reports(reports, fields, output_dir):
+    exported = []
+    failed = []
+    for report in reports:
+        report_id = report["id"]
+        if report_id not in exported and report_id not in failed:
+            success = export_report(report, fields, output_dir)
+            if success:
+                exported.append(report_id)
+            else:
+                failed.append(report_id)
+    return exported, failed
+
+def save_state(state, state_file):
+    with open(state_file, 'wb') as f:
+        pickle.dump(state, f)
+        logging.info(f"State saved to {state_file}")
+
+def load_state(state_file):
+    if os.path.exists(state_file):
+        with open(state_file, 'rb') as f:
+            return pickle.load(f)
+    return None
+
+def main():
+    reports = [
+        {
+            "id": "week-01",
+            "title": "项目周报",
+            "rows": [
+                {"owner": "Yu", "task": "接口联调", "status": "closed"},
+                {"owner": "Luo", "task": "页面调整", "status": "processing"},
+            ],
+        },
+        {
+            "id": "week-02",
+            "title": "资料整理",
+            "rows": [{"owner": "Wen", "task": "目录更新", "status": "open"}],
+        },
+    ]
+    fields = ["owner", "task", "status"]
+    output_dir = "output"
+    state_file = "state.pkl"
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    state = load_state(state_file)
+    if state:
+        exported, failed = state
+    else:
+        exported, failed = [], []
+
+    for report in reports:
+        if report["id"] not in exported and report["id"] not in failed:
+            success = export_report(report, fields, output_dir)
+            if success:
+                exported.append(report["id"])
+            else:
+                failed.append(report["id"])
+
+    save_state((exported, failed), state_file)
+    result = {
+        "exported": exported,
+        "failed": failed
+    }
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+
+if __name__ == "__main__":
+    main()
+```
+
+### 测试样例
+
+```python
+def test_export_reports():
+    reports = [
+        {
+            "id": "week-01",
+            "title": "项目周报",
+            "rows": [
+                {"owner": "Yu", "task": "接口联调", "status": "closed"},
+                {"owner": "Luo", "task": "页面调整", "status": "processing"},
+            ],
+        },
+        {
+            "id": "week-02",
+            "title": "资料整理",
+            "rows": [{"owner": "Wen", "task": "目录更新", "status": "open"}],
+        },
+    ]
+    fields = ["owner", "task", "status"]
+    output_dir = "test_output"
+    state_file = "test_state.pkl"
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    exported, failed = export_reports(reports, fields, output_dir)
+    assert len(exported) == 2
+    assert len(failed) == 0
+
+    # 模拟中断后继续执行
+    failed.append("week-01")
+    save_state((exported, failed), state_file)
+
+    exported, failed = export_reports(reports, fields, output_dir)
+    assert len(exported) == 1
+    assert len(failed) == 1
+
+    print("All tests passed!")
+
+test_export_reports()
+```
+
+### 解释
+1. **去重和恢复**：通过 `report_id` 来确保去重和恢复。
+2. **进度记录**：使用 `logging` 记录进度。
+3. **失败记录**：记录失败的报告 ID。
+4. **中断后继续执行**：使用 `pickle` 保存当前状态，确保在中断后继续执行。
+
+通过这些改进，可以更好地处理较多报告的分批导出，并确保在中断后能够继续执行。

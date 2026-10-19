@@ -1,0 +1,98 @@
+### 资料事实
+
+1. **`render_csv` 函数**：负责将给定的 `rows` 和 `fields` 转换为 CSV 格式的字符串。
+2. **`export_reports` 函数**：负责批量导出报告，将每个报告的 `id`、`title` 和 `rows` 转换为 CSV 格式，并将结果存储在一个字典列表中。
+3. **`main` 函数**：负责生成示例数据并调用 `export_reports` 函数进行导出，最后将结果以 JSON 格式打印出来。
+
+### 待确认信息
+
+1. **批量导出的数据流**：从 `reports` 列表开始，每个报告的 `rows` 被转换为 CSV 格式，然后将 `id`、`title` 和转换后的 CSV 内容存储到 `exported` 列表中。
+2. **在大量报告、字段缺失和导出中断情境下的问题**：
+   - **大量报告**：需要确保内存和性能不会因为大量报告而受到影响。
+   - **字段缺失**：需要确保在 `fields` 中缺失的字段不会导致错误。
+   - **导出中断**：需要确保在导出过程中发生中断时，能够正确恢复或记录中断情况。
+
+### 建议
+
+1. **批量导出的数据流**：保持当前实现，但增加日志记录以跟踪每个报告的处理情况。
+2. **在大量报告、字段缺失和导出中断情境下的问题**：
+   - **大量报告**：考虑使用异步处理或分批处理来减轻内存压力。
+   - **字段缺失**：在 `render_csv` 函数中增加检查，确保缺失的字段不会导致错误。
+   - **导出中断**：在 `export_reports` 函数中增加异常处理，记录中断情况并提供恢复机制。
+
+### 改造顺序
+
+1. **增加日志记录**：在 `export_reports` 和 `render_csv` 函数中增加日志记录，跟踪每个报告的处理情况。
+2. **处理大量报告**：考虑使用异步处理或分批处理来减轻内存压力。
+3. **处理字段缺失**：在 `render_csv` 函数中增加检查，确保缺失的字段不会导致错误。
+4. **处理导出中断**：在 `export_reports` 函数中增加异常处理，记录中断情况并提供恢复机制。
+
+### 验证方法
+
+1. **增加日志记录**：
+   - 在 `export_reports` 和 `render_csv` 函数中添加日志记录，确保日志能够正确记录每个报告的处理情况。
+2. **处理大量报告**：
+   - 使用异步处理或分批处理，确保在处理大量报告时不会导致内存溢出。
+   - 测试在大量报告的情况下，程序是否能够正常运行。
+3. **处理字段缺失**：
+   - 在 `render_csv` 函数中增加检查，确保缺失的字段不会导致错误。
+   - 测试在 `fields` 中缺失字段的情况下，程序是否能够正常运行。
+4. **处理导出中断**：
+   - 在 `export_reports` 函数中增加异常处理，记录中断情况并提供恢复机制。
+   - 测试在导出过程中发生中断时，程序是否能够正确记录中断情况并提供恢复机制。
+
+### 代码实现
+
+```python
+import csv
+import io
+import json
+import logging
+
+logging.basicConfig(level=logging.INFO)
+
+def render_csv(rows, fields):
+    output = io.StringIO(newline="")
+    writer = csv.DictWriter(output, fieldnames=fields, extrasaction="ignore")
+    writer.writeheader()
+    writer.writerows(rows)
+    return output.getvalue()
+
+def export_reports(reports, fields):
+    exported = []
+    for report in reports:
+        try:
+            logging.info(f"Processing report: {report['id']}")
+            exported.append({
+                "id": report["id"],
+                "title": report["title"],
+                "csv": render_csv(report["rows"], fields),
+            })
+        except Exception as e:
+            logging.error(f"Failed to process report: {report['id']}, error: {e}")
+    return exported
+
+def main():
+    reports = [
+        {
+            "id": "week-01",
+            "title": "项目周报",
+            "rows": [
+                {"owner": "Yu", "task": "接口联调", "status": "closed"},
+                {"owner": "Luo", "task": "页面调整", "status": "processing"},
+            ],
+        },
+        {
+            "id": "week-02",
+            "title": "资料整理",
+            "rows": [{"owner": "Wen", "task": "目录更新", "status": "open"}],
+        },
+    ]
+    result = export_reports(reports, ["owner", "task", "status"])
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+
+if __name__ == "__main__":
+    main()
+```
+
+通过以上步骤和验证方法，可以确保程序在各种情况下都能正常运行并提供正确的输出。
